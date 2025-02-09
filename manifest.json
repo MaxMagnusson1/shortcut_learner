@@ -1,21 +1,57 @@
 {
-    "manifest_version": 3,
-    "name": "Hej på Google Docs",
-    "version": "1.0",
-    "description": "Säger hej när du besöker Google Docs",
-    "permissions": ["activeTab"],
-    "content_scripts": [
-      {
-        "matches": ["https://docs.google.com/document/*"],
-        "js": ["content.js"]
-      }
-    ],
-    "action": {
-      "default_popup": "popup.html",
-      "default_icon": {
-        "16": "icon16.png",
-        "48": "icon48.png",
-        "128": "icon128.png"
-      }
+  "manifest_version": 3,
+  "name": "Hej-tillägg",
+  "version": "1.0",
+  "description": "Visar en hälsning nere i hörnet.",
+  "permissions": [
+    "activeTab",
+    "tabs", 
+    "scripting", 
+    "webNavigation"
+  ],
+
+  "background": {
+    "service_worker": "js/background.js"
+  },
+
+  "icons": {
+    "16": "img/icon16.png",
+    "48": "img/icon48.png",
+    "128": "img/icon128.png"
+  },
+
+  "action": {
+    "default_icon": "img/icon48.png",
+    "default_title": "Klicka för att säga Hej!"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"], 
+      "js": [
+        "js/shortcommand_div.js", 
+        "js/reloadHandler.js",
+        "js/urlHandler.js",
+        "js/tabListener.js",
+        "js/content.js"
+      ],
+      "css": ["style.css"], 
+      "run_at": "document_start"
     }
-  }
+  ],
+
+  "host_permissions": ["http://*/*", "https://*/*"],
+
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "js/shortcommand_div.js",
+        "js/reloadHandler.js",
+        "js/urlHandler.js",
+        "js/tabListener.js",
+        "js/content.js"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
