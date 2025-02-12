@@ -1,10 +1,14 @@
 class ShortcommandDiv {
   constructor() {
       this.div = null;
-      console.log("ShortcommandDiv.js laddat");
+        console.log("ShortcommandDiv.js laddat");
+      this.monitorEvents();
+
   }
+  
 
   createDiv() {
+
       if (this.div) {
           this.removeDiv();
           this.div = null;
@@ -12,7 +16,6 @@ class ShortcommandDiv {
   }
 
   setTextInDiv(text) {     
-    console.log("HEJSAN");
       if (!this.div) {
           this.div = document.createElement("div");
           this.div.id = "shortcommandDiv";
@@ -30,14 +33,22 @@ class ShortcommandDiv {
       }, 5000);
   }
 
-  // 🛑 Lyssna på när webbsidan tappar fokus (kan vara adressfältet)
 
 
+  monitorEvents() {
+    // console.log("👀 Lyssnar på händelser...");
+    ["click", "mousedown", "mouseup", "focus", "blur"].forEach((eventType) => {
+      document.addEventListener(eventType, (event) => {
+        console.log(`🖥️ Händelse fångad: ${eventType}`);
+        console.log("Element som triggade:", event.target);
+      });
+    });
+  }
 }
-
+  
 // 🛠 Lyssna på meddelanden från background.js
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log("📩 Meddelande mottaget:", message);
+//   console.log("📩 Meddelande mottaget:", message);
 
   if (message.action === "show_message" ) {
     
@@ -71,7 +82,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
       shortcommandDiv.setTextInDiv(shortcommand);
   }
-});
+}
+
+
+
+);
 
 
 
@@ -79,7 +94,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 window.addEventListener("blur", () => {
   let shortcommandDiv = new ShortcommandDiv();
   let shortcommand = "";
-  console.log("🔍 Användaren tryckte förmodligen på adressfältet.");
+//   console.log("🔍 Användaren tryckte förmodligen på adressfältet.");
   shortcommand = "CTRL + L";
   shortcommandDiv.setTextInDiv(shortcommand);
 });

@@ -8,6 +8,10 @@ console.log("Background script laddat");
 chrome.tabs.onCreated.addListener((tab) => {
 
     // Om det är en ny tom flik (`chrome://newtab/`), omdirigera till Google
+    /**
+     * Kontrollerar ifall tab.url är tom eller om det är en ny flik, om det är sant så omdirigerar den till google
+     * chrome eventet onUpdated som lyssnar på när google har laddats klart och och gör sedan en kontroll och skriver ut CTRL + t
+     */
     if (!tab.url || tab.url.startsWith("chrome://newtab")) {
         console.warn("🚫 Upptäckte en tom flik, omdirigerar till Google...");
         chrome.tabs.update(tab.id, { url: "https://www.google.com" });
@@ -66,6 +70,8 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
 
 /**
  * Kod för lyssna efter om användaren laddar om sidan CTRL R
+ * Lyssnar efter om det uppdateras, när statusen är complete och om det är samma tab url så skrivs ctrl r ut. 
+ * Om url inte är samma skrivs alt + ← / alt + → ut men kan även triggas när man byter flik
  */
 // Spara tidigare URL för varje flik
 let previousUrls = {};
@@ -123,7 +129,8 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
 });
 
 /** 
- * Lyssnar på när en flik stängs och skriver ut CTRL + W    
+ * Lyssnar på när en flik stängs och skriver ut CTRL + W  
+ * Finns event som lysnar på ifall tabs är borttagna, kontrollerar ifall det är tabben man är på  
  */
 chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
 
@@ -146,6 +153,10 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
     }
 });
 
+
+/**
+ * Lyssnar efter att användaren öppnar inspectorn
+ */
 
 
 
