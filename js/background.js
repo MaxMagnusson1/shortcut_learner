@@ -1,6 +1,32 @@
-console.log("Background script laddat");
+console.log("Background script laddar");
 
 
+let platformCommand = "CTRL"; // Standard för Windows/Linux
+
+// Kontrollera operativsystem
+chrome.runtime.getPlatformInfo((platformInfo) => {
+  if (platformInfo.os === "mac") {
+    platformCommand = "CMD";
+    console.log("Operativsystem: macOS");
+  } else if (platformInfo.os === "win") {
+    platformCommand = "CTRL";
+    console.log("Operativsystem: Windows");
+  } else if (platformInfo.os === "linux") {
+    platformCommand = "CTRL";
+    console.log("Operativsystem: Linux");
+  } else {
+    console.log("Okänt operativsystem:", platformInfo.os);
+  }
+});
+
+// 🛠 Lyssna på förfrågningar från content-skriptet
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    console.log(message.action);
+  if (message.action === "get_platform_command") {
+    console.log(platformCommand);
+    sendResponse({ platformCommand }); // Skicka tillbaka plattformskommandot
+  }
+});
 
 /**
  * Lyssnar på när en ny flik skapas och omdirigerar till Google OCH skriver ut CTRL + T
@@ -155,12 +181,40 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
 
 
 /**
- * Lyssnar efter att användaren öppnar inspectorn
+ * Lyssnar efter att användaren bokmärker en sida 
+ */
+chrome.bookmarks.onCreated.addListener((id, bookmark) => {
+    chrome.tabs.sendMessage(activeTabId, {
+        action: "show_message",
+        text: "CTRL + D"
+    }, () => {
+        if (chrome.runtime.lastError) {
+            console.warn("⚠️ Kunde inte skicka meddelande. Content-script kanske inte är laddat?");
+        }
+    });
+});
+  
+
+/**
+ * Hanterar när användaren laddar ner något och skriver ut CTRL + S
  */
 
 
+chrome.downloads.onCreated.addListener((downloadItem) => {
+    chrome.tabs.sendMessage(activeTabId, {
+        action: "show_message",
+        text: "CTRL + S"
+    }, () => {
+        if (chrome.runtime.lastError) {
+            console.warn("⚠️ Kunde inte skicka meddelande. Content-script kanske inte är laddat?");
+        }
+    });
 
+  });
 
+  
+
+  
 
 
 
