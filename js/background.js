@@ -181,7 +181,7 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
 
 
 /**
- * Lyssnar efter att användaren bokmärker en sida 
+ * Lyssna efter att användaren bokmärker en sida 
  */
 chrome.bookmarks.onCreated.addListener((id, bookmark) => {
     chrome.tabs.sendMessage(activeTabId, {
