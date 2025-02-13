@@ -1,32 +1,6 @@
 console.log("Background script laddar");
 
 
-let platformCommand = "CTRL"; // Standard för Windows/Linux
-
-// Kontrollera operativsystem
-chrome.runtime.getPlatformInfo((platformInfo) => {
-  if (platformInfo.os === "mac") {
-    platformCommand = "CMD";
-    console.log("Operativsystem: macOS");
-  } else if (platformInfo.os === "win") {
-    platformCommand = "CTRL";
-    console.log("Operativsystem: Windows");
-  } else if (platformInfo.os === "linux") {
-    platformCommand = "CTRL";
-    console.log("Operativsystem: Linux");
-  } else {
-    console.log("Okänt operativsystem:", platformInfo.os);
-  }
-});
-
-// 🛠 Lyssna på förfrågningar från content-skriptet
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log(message.action);
-  if (message.action === "get_platform_command") {
-    console.log(platformCommand);
-    sendResponse({ platformCommand }); // Skicka tillbaka plattformskommandot
-  }
-});
 
 /**
  * Lyssnar på när en ny flik skapas och omdirigerar till Google OCH skriver ut CTRL + T
@@ -54,7 +28,7 @@ chrome.tabs.onCreated.addListener((tab) => {
                     text: "CTRL + T"
                 }, () => {
                     if (chrome.runtime.lastError) {
-                        console.warn("⚠️ Kunde inte skicka meddelande. Content-script kanske inte är laddat?");
+                        // console.warn("⚠️ Kunde inte skicka meddelande. Content-script kanske inte är laddat?");
                     }
                 });
 
@@ -87,8 +61,7 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
             text: "CTRL + TAB"
         }, () => {
             if (chrome.runtime.lastError) {
-
-                console.warn("⚠️ Inga mottagare för meddelandet. Content-script kanske inte är laddat?");
+                // console.warn("⚠️ Inga mottagare för meddelandet. Content-script kanske inte är laddat?");
             }
         });
     });
@@ -108,14 +81,14 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
         // Kolla om URL:en är densamma som innan
         if (previousUrls[tabId] === tab.url) {
-
+            console.log("🔄 Sidan laddades om. Skickar meddelande...");
             // Skicka meddelandet till content-script
             chrome.tabs.sendMessage(tabId, {
                 action: "show_message",
                 text: "CTRL + R"
             }, () => {
                 if (chrome.runtime.lastError) {
-                    console.warn("⚠️ Kunde inte skicka meddelande. Content-script kanske inte är laddat?");
+                    // console.warn("⚠️ Kunde inte skicka meddelande. Content-script kanske inte är laddat?");
                 }
             });
         }
@@ -126,7 +99,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
                 text: "ALT + ← / ALT + →"
             }, () => {
                 if (chrome.runtime.lastError) {
-                    console.warn("⚠️ Kunde inte skicka meddelande. Content-script kanske inte är laddat?");
+                    // console.warn("⚠️ Kunde inte skicka meddelande. Content-script kanske inte är laddat?");
                 }
             });
         }
@@ -171,7 +144,7 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
                     text: "CTRL + W"
                 }, () => {
                     if (chrome.runtime.lastError) {
-                        console.warn("⚠️ Kunde inte skicka meddelande. Content-script kanske inte är laddat?");
+                        // console.warn("⚠️ Kunde inte skicka meddelande. Content-script kanske inte är laddat?");
                     }
                 });
             }
@@ -189,7 +162,7 @@ chrome.bookmarks.onCreated.addListener((id, bookmark) => {
         text: "CTRL + D"
     }, () => {
         if (chrome.runtime.lastError) {
-            console.warn("⚠️ Kunde inte skicka meddelande. Content-script kanske inte är laddat?");
+            // console.warn("⚠️ Kunde inte skicka meddelande. Content-script kanske inte är laddat?");
         }
     });
 });
@@ -206,7 +179,7 @@ chrome.downloads.onCreated.addListener((downloadItem) => {
         text: "CTRL + S"
     }, () => {
         if (chrome.runtime.lastError) {
-            console.warn("⚠️ Kunde inte skicka meddelande. Content-script kanske inte är laddat?");
+            // console.warn("⚠️ Kunde inte skicka meddelande. Content-script kanske inte är laddat?");
         }
     });
 

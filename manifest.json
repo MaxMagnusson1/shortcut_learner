@@ -33,9 +33,6 @@
       "matches": ["http://*/*", "https://*/*"], 
       "js": [
         "js/shortcommand_div.js", 
-        "js/reloadHandler.js",
-        "js/urlHandler.js",
-        "js/tabListener.js",
         "js/content.js"
       ],
       "css": ["style.css"], 

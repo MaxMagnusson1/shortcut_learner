@@ -1,13 +1,20 @@
 
 class ShortCommandNotifier {
+    /**
+     * Contructor för shortcommandnotifier klassen
+     */
+
     constructor() {
         this.devtoolsOpen = false;
-        this.previousHeight = window.innerHeight;
-        this.shortcutUsed = false; // Spårar om användaren har tryckt Ctrl + L eller Ctrl + I
+        // this.previousHeight = window.innerHeight;
+        this.shortcutUsed = false; 
 
-        // Skapa en div för att visa texten
-        this.SCDiv = new ShortcommandDiv();
-        this.SCDiv.createDiv();
+
+        this.os = this.detectOS();
+
+        // // Skapa en div för att visa texten
+        this.SCDiv = new ShortcommandDiv(this.os);
+        // this.SCDiv.createDiv();
 
         // this.URL = new UrlHandler(this.SCDiv);
         // this.URL.setupEventListeners();
@@ -25,6 +32,17 @@ class ShortCommandNotifier {
 
         // Lyssna på events
         //this.setupEventListeners();
+    }
+
+    /**
+     * Kontrollerar vilket operativsystem användaren använder
+     * @returns {String} - Returnerar vilket operativsystem använd
+     */
+    detectOS() {
+        const platform = navigator.userAgent.toLowerCase();
+        if (platform.includes('win')) return 'CTRL';
+        if (platform.includes('mac')) return 'CMD';
+        return 'CTRL/CMD';
     }
 
     // setupEventListeners() {
@@ -81,6 +99,8 @@ class ShortCommandNotifier {
     //     }
     // }
 }
+
+
 
 // Skapa en instans av ShortCommandNotifier
 new ShortCommandNotifier();
