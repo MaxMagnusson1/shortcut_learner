@@ -1,5 +1,3 @@
-console.log("Background script laddar");
-
 
 
 /**
@@ -83,7 +81,8 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         if (previousUrls[tabId] === tab.url) {
             console.log("🔄 Sidan laddades om. Skickar meddelande...");
             // Skicka meddelandet till content-script
-            chrome.tabs.sendMessage(tabId, {
+
+                  chrome.tabs.sendMessage(tabId, {
                 action: "show_message",
                 text: "CTRL + R"
             }, () => {
@@ -91,10 +90,14 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
                     // console.warn("⚠️ Kunde inte skicka meddelande. Content-script kanske inte är laddat?");
                 }
             });
+            
+
+          
         }
 
         else {
-            chrome.tabs.sendMessage(tabId, {
+            
+                chrome.tabs.sendMessage(tabId, {
                 action: "show_message",
                 text: "ALT + ← / ALT + →"
             }, () => {
@@ -102,6 +105,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
                     // console.warn("⚠️ Kunde inte skicka meddelande. Content-script kanske inte är laddat?");
                 }
             });
+            
         }
 
         // Uppdatera den sparade URL:en för denna flik
@@ -171,8 +175,6 @@ chrome.bookmarks.onCreated.addListener((id, bookmark) => {
 /**
  * Hanterar när användaren laddar ner något och skriver ut CTRL + S
  */
-
-
 chrome.downloads.onCreated.addListener((downloadItem) => {
     chrome.tabs.sendMessage(activeTabId, {
         action: "show_message",
@@ -186,7 +188,11 @@ chrome.downloads.onCreated.addListener((downloadItem) => {
   });
 
   
-
+/** 
+ * Om CTRL W skrivs ut ska inte ctrl tab skrivas ut 
+ * Om CTRL T skrivs ut ska inte alt ← / alt → skrivas ut
+ * ifall muskordinater inte är undefined ska inte alt ← / alt → skrivas ut
+ */
   
 
 

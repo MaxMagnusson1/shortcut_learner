@@ -21,8 +21,7 @@ class ShortcommandDiv {
       this.createDivContainer(); // Skapa container efter att DOM är redo
       this.setupSelectAllListener();
 
-    }); 
-  
+    });   
   }
 
 
@@ -67,28 +66,47 @@ setTextInDiv(text) {
 
 
   setupSelectAllListener() {
+    let timeoutId = null;
+
     document.addEventListener("selectionchange", () => {
-      if (!this.isPromptVisible) {
-        const selectedText = this.normalizeText(window.getSelection().toString());
-        // Kontrollera om all text på sidan är markerad
-        if (selectedText.length > 0) {
-          this.isPromptVisible = true;
-          this.setTextInDiv(`${this.platformCommand} + A: For all text, trippel click for 1 row, for 1 word double click`);
+        // Rensa eventuell tidigare timeout för att undvika onödig körning
+        clearTimeout(timeoutId);
 
-          setTimeout(() => {
-            this.isPromptVisible = false;
-          }, 5000);
-        }
-      }
+        // Vänta 300ms innan vi hanterar markeringen för att ge användaren tid att markera färdigt
+        timeoutId = setTimeout(() => {
+            if (!this.isPromptVisible) {
+                const selection = window.getSelection();
+                if (!selection || selection.rangeCount === 0) return;
+
+                const selectedText = selection.toString().trim();
+                if (selectedText.length === 0) return; // Undvik att köra på tom markering
+
+                let message = `${this.platformCommand} + A: For all text, triple click for 1 row, double click for 1 word`;
+
+                console.log("Markerad text:", selectedText); // Debugging
+
+                if (selectedText.includes("\n")) {
+                    // Om det finns en radbrytning, antar vi att en hel rad är markerad
+                    message = "CTRL A for all text";
+                } else if (selectedText.split(" ").length > 1) {
+                    // Om det finns fler än ett ord (minst ett mellanslag)
+                    message = "Double-click selects one word. Click and drag to select multiple words.";
+                } else {
+                    // Om endast ett ord är markerat
+                    message = "Double-click to select a word.";
+                }
+
+                this.isPromptVisible = true;
+                this.setTextInDiv(message);
+
+                setTimeout(() => {
+                    this.isPromptVisible = false;
+                }, 5000);
+            }
+        }, 300); // Väntar 300ms innan den kör logiken
     });
-  }
-    // Funktion för att normalisera text
-   normalizeText(text) {
+}
 
-    return text
-        .replace(/\s+/g, " ") // Ersätt flera mellanrum med ett enda
-        .trim(); // Ta bort ledande och efterföljande mellanrum
-    }
   
     
   
@@ -135,8 +153,17 @@ setTextInDiv(text) {
      *Kontrollerar ifall något trycker på adressfältet, fungerar inte som det ska 
      */
     window.addEventListener("blur", () => {
-      let shortcommand = "CTRL + L";
-      this.setTextInDiv(shortcommand);
+      document.addEventListener("click", function(event) {
+        this.X_axis = event.clientX;
+        this.Y_axis = event.clientY;
+      });
+
+        if (!this.X_axis && !this.Y_axis) {
+          let shortcommand = "CTRL + L";
+          this.setTextInDiv(shortcommand);
+        }
+        else return;
+     
     });
   }
 
@@ -154,7 +181,6 @@ setTextInDiv(text) {
    */
   setupPasteListener() {
     document.addEventListener("paste", (event) => {
-        console.log("Pasting"); 
       this.setTextInDiv(`${this.platformCommand} + V`);
     });
   }
