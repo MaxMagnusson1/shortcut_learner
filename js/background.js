@@ -192,6 +192,7 @@ chrome.downloads.onCreated.addListener((downloadItem) => {
  * Om CTRL W skrivs ut ska inte ctrl tab skrivas ut 
  * Om CTRL T skrivs ut ska inte alt ← / alt → skrivas ut
  * ifall muskordinater inte är undefined ska inte alt ← / alt → skrivas ut
+ * CTRL R skrivs ut om man går direkt till en sida
  */
   
 
