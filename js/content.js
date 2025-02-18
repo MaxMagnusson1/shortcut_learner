@@ -32,6 +32,9 @@ class ShortCommandNotifier {
 
         // Lyssna på events
         //this.setupEventListeners();
+
+      
+        
     }
 
     /**

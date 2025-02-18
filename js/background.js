@@ -1,10 +1,14 @@
 
 
+
+
 /**
  * Lyssnar på när en ny flik skapas och omdirigerar till Google OCH skriver ut CTRL + T
  */
 chrome.tabs.onCreated.addListener((tab) => {
-
+        this.isCtrlTVisible = false;
+        this.isCtrlWVisible = false;
+        this.flagForWebbsiteForCTRLR = false;
     // Om det är en ny tom flik (`chrome://newtab/`), omdirigera till Google
     /**
      * Kontrollerar ifall tab.url är tom eller om det är en ny flik, om det är sant så omdirigerar den till google
@@ -19,7 +23,8 @@ chrome.tabs.onCreated.addListener((tab) => {
 
             // Kontrollera om URL är korrekt
             if (tabId === tab.id && changeInfo.status === "complete" && updatedTab.url && updatedTab.url.includes("https://www.google.com")) {
-
+                this.isCtrlTVisible = true;
+                console.log("CTRL + T");
                 // Skicka meddelandet först när Google har laddats klart
                 chrome.tabs.sendMessage(tab.id, {
                     action: "show_message",
@@ -52,9 +57,10 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
             return;
         }
 
-
+        console.log("CTRL + TAB");  
         // Skicka meddelande till den aktiva fliken (för flikbyte)
-        chrome.tabs.sendMessage(tab.id, {
+        if(!this.isCtrlWVisible){
+            chrome.tabs.sendMessage(tab.id, {
             action: "show_message",
             text: "CTRL + TAB"
         }, () => {
@@ -62,6 +68,11 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
                 // console.warn("⚠️ Inga mottagare för meddelandet. Content-script kanske inte är laddat?");
             }
         });
+        }
+        this.isCtrlWVisible = false;
+        
+
+
     });
 });
 
@@ -81,8 +92,9 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         if (previousUrls[tabId] === tab.url) {
             console.log("🔄 Sidan laddades om. Skickar meddelande...");
             // Skicka meddelandet till content-script
-
-                  chrome.tabs.sendMessage(tabId, {
+            console.log(this.flagForWebbsiteForCTRLR)
+            if(!this.flagForWebbsiteForCTRLR){
+                 chrome.tabs.sendMessage(tabId, {
                 action: "show_message",
                 text: "CTRL + R"
             }, () => {
@@ -90,13 +102,15 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
                     // console.warn("⚠️ Kunde inte skicka meddelande. Content-script kanske inte är laddat?");
                 }
             });
-            
-
-          
+            }
+            this.flagForWebbsiteForCTRLR = false;
+                 
         }
 
         else {
-            
+
+            setTimeout(() => {
+                if(!this.isCtrlTVisible && !this.flagForWebbsiteForAlt){
                 chrome.tabs.sendMessage(tabId, {
                 action: "show_message",
                 text: "ALT + ← / ALT + →"
@@ -105,6 +119,13 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
                     // console.warn("⚠️ Kunde inte skicka meddelande. Content-script kanske inte är laddat?");
                 }
             });
+                }
+                this.isCtrlTVisible = false;
+                this.flagForWebbsiteForAlt = false;
+            }, 1);
+
+                
+               
             
         }
 
@@ -143,6 +164,8 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
         // Hitta en annan öppen flik att skicka meddelandet till
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             if (tabs.length > 0) {
+                console.log("CTRL + W");
+                this.isCtrlWVisible = true;
                 chrome.tabs.sendMessage(tabs[0].id, {
                     action: "show_message",
                     text: "CTRL + W"
@@ -186,13 +209,71 @@ chrome.downloads.onCreated.addListener((downloadItem) => {
     });
 
   });
+  chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    if (changeInfo.url) {
+        const url = new URL(changeInfo.url);
+
+        // Kontrollera om det är en sökning eller en direkt navigering
+        if ((url.hostname.includes("google.com") && url.pathname.includes("/search")) ||
+            (url.hostname.includes("bing.com") && url.pathname.includes("/search")) ||
+            (url.hostname.includes("duckduckgo.com") && url.pathname.includes("/")) ||
+            (url.hostname.includes("yahoo.com") && url.pathname.includes("/search"))) {
+            
+            // Det är en sökning
+            console.log("🔍 Användaren gjorde en sökning:", url.searchParams.get("q"));
+        } else {
+            // Det är en direkt navigering till en webbplats
+            console.log("🌍 Användaren navigerade till en webbsida:", url.href);
+            this.flagForWebbsiteForCTRLR = true;
+            this.flagForWebbsiteForAlt = true;
+        }
+    }
+});
+
+
+// Lyssnar på meddelanden från shortcommand_div.js och sparar kortkommandon
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.action === "save_shortcut") {
+        saveShortcutToStorage(message.shortcut);
+        sendResponse({ status: "Shortcut saved!" });
+    }
+});
+
+// Funktion för att spara kortkommandon som en räknare
+function saveShortcutToStorage(shortcut) {
+    chrome.storage.local.get(["shortcuts"], function (result) {
+        let shortcuts = result.shortcuts || {}; // Hämta befintliga kortkommandon (som objekt)
+
+        // Om kortkommandot redan finns, öka räknaren, annars sätt den till 1
+        shortcuts[shortcut] = (shortcuts[shortcut] || 0) + 1;
+
+        // Spara tillbaka uppdaterad data i Chrome Storage
+        chrome.storage.local.set({ shortcuts: shortcuts }, function () {
+            console.log(`✅ Kortkommando '${shortcut}' har nu använts ${shortcuts[shortcut]} gånger.`);
+        });
+    });
+}
+
+
+
+
+
+
+
+
+
+
+
 
   
 /** 
- * Om CTRL W skrivs ut ska inte ctrl tab skrivas ut 
- * Om CTRL T skrivs ut ska inte alt ← / alt → skrivas ut
+ * Om CTRL W skrivs ut ska inte ctrl tab skrivas ut -- FIXAD
+ * Om CTRL T skrivs ut ska inte alt ← / alt → skrivas ut --FIXAD 
  * ifall muskordinater inte är undefined ska inte alt ← / alt → skrivas ut
- * CTRL R skrivs ut om man går direkt till en sida
+ * CTRL R skrivs ut om man går direkt till en sida --FIXAD
+ * alt skrivs ut om man går direkt till en sida --FIXAD
+ * CTRL R skrivs ut 4 gånger typ
+ * Hur ska man hantera ifall användaren går till newtab
  */
   
 

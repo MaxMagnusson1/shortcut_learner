@@ -1,3 +1,5 @@
+
+
 class ShortcommandDiv {
 
   /**
@@ -21,7 +23,10 @@ class ShortcommandDiv {
       this.createDivContainer(); // Skapa container efter att DOM är redo
       this.setupSelectAllListener();
 
+      
     });   
+
+  
   }
 
 
@@ -98,6 +103,7 @@ setTextInDiv(text) {
 
                 this.isPromptVisible = true;
                 this.setTextInDiv(message);
+                this.sendToStorage(message);
 
                 setTimeout(() => {
                     this.isPromptVisible = false;
@@ -127,9 +133,11 @@ setTextInDiv(text) {
       if (devToolsNowOpen && !this.devToolsOpen) {
         this.devToolsOpen = true;
         this.setTextInDiv(this.platformCommand + " + SHIFT + I");
+        this.sendToStorage("CTRL/CMD + SHIFT + I");
       } else if (!devToolsNowOpen && this.devToolsOpen) {
         this.devToolsOpen = false;
         this.setTextInDiv(this.platformCommand + " + SHIFT + I");
+        this.sendToStorage("CTRL/CMD + SHIFT + I");
       }
     };
 
@@ -146,7 +154,9 @@ setTextInDiv(text) {
   setupEventListeners() {
     window.addEventListener("beforeprint", () => {
       let shortcommand = "CTRL + P";
+      let shortcommandForJson = "CTRL/CMD + P";
       this.setTextInDiv(shortcommand);
+      this.sendToStorage(shortcommandForJson);
     });
 
     /**
@@ -159,8 +169,10 @@ setTextInDiv(text) {
       });
 
         if (!this.X_axis && !this.Y_axis) {
+          let shortcommandForJson ="CTRL/CMD + L";
           let shortcommand = "CTRL + L";
           this.setTextInDiv(shortcommand);
+          this.sendToStorage(shortcommandForJson);
         }
         else return;
      
@@ -172,7 +184,10 @@ setTextInDiv(text) {
  */
   setupCopyListener() {
     document.addEventListener("copy", (event) => {
+      this.shortcommandForJson = "CTRL/CMD + C";
       this.setTextInDiv(`${this.platformCommand} + C`);
+      this.sendToStorage(this.shortcommandForJson);
+
     });
   }
 
@@ -181,7 +196,10 @@ setTextInDiv(text) {
    */
   setupPasteListener() {
     document.addEventListener("paste", (event) => {
+      this.shortcommandForJson = "CTRL/CMD + V";
       this.setTextInDiv(`${this.platformCommand} + V`);
+      this.sendToStorage(this.shortcommandForJson);
+
     });
   }
   
@@ -195,35 +213,43 @@ setTextInDiv(text) {
       if (message.action === "show_message") {
         // Vänta på att `platformCommand` laddas innan användning
           let shortcommand = "";
-
+          let shortcommandForJson = "";
           // Dynamisk hantering av kortkommandon
           switch (message.text) {
             case "CTRL + W":
               shortcommand = `${this.platformCommand} + W`;
+              shortcommandForJson = "CTRL/CMD + W";
               break;
 
             case "CTRL + TAB":
               shortcommand = `${this.platformCommand} + TAB`;
+              shortcommandForJson = "CTRL/CMD + TAB";
+
               break;
 
             case "CTRL + T":
               shortcommand = `${this.platformCommand} + T`;
+              shortcommandForJson = "CTRL/CMD + T";
               break;
 
             case "CTRL + R":
               shortcommand = `${this.platformCommand} + R`;
+              shortcommandForJson = "CTRL/CMD + R";
               break;
 
             case "ALT + ← / ALT + →":
               shortcommand = "ALT + ← / ALT + →"; // ALT ändras inte beroende på plattform
+              shortcommandForJson = "ALT + ← / ALT + →";
               break;
 
             case "CTRL + D":
               shortcommand = `${this.platformCommand} + D`;
+              shortcommandForJson = "CTRL/CMD + D";
               break;
 
             case "CTRL + S":
               shortcommand = `${this.platformCommand} + S`;
+              shortcommandForJson = "CTRL/CMD + S";
               break;
             default:
               console.warn("🤷 Okänt meddelande:", message.text);
@@ -232,10 +258,28 @@ setTextInDiv(text) {
 
           // Visa kortkommandot
           this.setTextInDiv(shortcommand);
+
+          //här ska data skickas till storage.js
+        
+          // Skicka data till storage.js för att spara det i chrome.storage.local
+          this.sendToStorage(shortcommandForJson);
+
         
       }
     });
   }
+
+  sendToStorage(shortcommandForJson) {
+     // Skicka data till storage.js för att spara det i chrome.storage.local
+     chrome.runtime.sendMessage({
+      action: "save_shortcut",
+      shortcut: shortcommandForJson
+    }, function(response) {
+      console.log("Svar från storage.js:", response);
+    });
+  }
+
+  
 }
 
 window.ShortcommandDiv = ShortcommandDiv;

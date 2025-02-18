@@ -10,8 +10,12 @@
     "webNavigation", 
     "bookmarks",
     "downloads", 
-    "scripting"
+    "scripting", 
+    "storage"
   ],
+
+  "omnibox": { "keyword": "sök" }, 
+
 
   "background": {
     "service_worker": "js/background.js"
