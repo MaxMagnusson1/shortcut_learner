@@ -22,7 +22,7 @@ class ShortcommandDiv {
     document.addEventListener("DOMContentLoaded", () => {
       this.createDivContainer(); // Skapa container efter att DOM är redo
       this.setupSelectAllListener();
-
+      this.setupEventListenersForShortcuts();
       
     });   
 
@@ -88,7 +88,6 @@ setTextInDiv(text) {
 
                 let message = `${this.platformCommand} + A: For all text, triple click for 1 row, double click for 1 word`;
 
-                console.log("Markerad text:", selectedText); // Debugging
 
                 if (selectedText.includes("\n")) {
                     // Om det finns en radbrytning, antar vi att en hel rad är markerad
@@ -121,7 +120,8 @@ setTextInDiv(text) {
    */
   detectDevTools() {
     const checkDevTools = () => {
-      if (this.firstRun) {
+
+         if (this.firstRun) {
         this.firstRun = false; 
         return;
       }
@@ -139,6 +139,7 @@ setTextInDiv(text) {
         this.setTextInDiv(this.platformCommand + " + SHIFT + I");
         this.sendToStorage("CTRL/CMD + SHIFT + I");
       }
+     
     };
 
     /**
@@ -153,10 +154,17 @@ setTextInDiv(text) {
    */
   setupEventListeners() {
     window.addEventListener("beforeprint", () => {
-      let shortcommand = "CTRL + P";
-      let shortcommandForJson = "CTRL/CMD + P";
-      this.setTextInDiv(shortcommand);
-      this.sendToStorage(shortcommandForJson);
+
+      if (!this.isCtrlPPressed){
+        let shortcommand = "CTRL + P";
+        let shortcommandForJson = "CTRL/CMD + P";
+        this.setTextInDiv(shortcommand);
+        this.sendToStorage(shortcommandForJson);
+      }
+
+      else {
+        this.isCtrlPPressed = false
+      }
     });
 
     /**
@@ -184,10 +192,16 @@ setTextInDiv(text) {
  */
   setupCopyListener() {
     document.addEventListener("copy", (event) => {
-      this.shortcommandForJson = "CTRL/CMD + C";
-      this.setTextInDiv(`${this.platformCommand} + C`);
-      this.sendToStorage(this.shortcommandForJson);
 
+      if(!this.isCtrlCPressed){
+          this.shortcommandForJson = "CTRL/CMD + C";
+          this.setTextInDiv(`${this.platformCommand} + C`);
+          this.sendToStorage(this.shortcommandForJson);
+      }
+      else {
+        this.isCtrlCPressed = false;
+      }
+     
     });
   }
 
@@ -196,9 +210,15 @@ setTextInDiv(text) {
    */
   setupPasteListener() {
     document.addEventListener("paste", (event) => {
-      this.shortcommandForJson = "CTRL/CMD + V";
+
+      if(!this.isCtrlVPressed){
+        this.shortcommandForJson = "CTRL/CMD + V";
       this.setTextInDiv(`${this.platformCommand} + V`);
       this.sendToStorage(this.shortcommandForJson);
+      }
+       else {
+        this.isCtrlVPressed = false;
+       }
 
     });
   }
@@ -218,6 +238,7 @@ setTextInDiv(text) {
           switch (message.text) {
             case "CTRL + W":
               shortcommand = `${this.platformCommand} + W`;
+              
               shortcommandForJson = "CTRL/CMD + W";
               break;
 
@@ -258,8 +279,6 @@ setTextInDiv(text) {
 
           // Visa kortkommandot
           this.setTextInDiv(shortcommand);
-
-          //här ska data skickas till storage.js
         
           // Skicka data till storage.js för att spara det i chrome.storage.local
           this.sendToStorage(shortcommandForJson);
@@ -269,17 +288,139 @@ setTextInDiv(text) {
     });
   }
 
+  setupEventListenersForShortcuts() {
+    let keysPressed = {}; // Håller koll på vilka tangenter som är nere
+
+    document.addEventListener("keydown", (event) => {
+
+        // Lagra vilka tangenter som är nedtryckta
+        keysPressed[event.key] = true;
+
+        let isMac = this.platformCommand === "CMD";
+        let ctrlOrCmd = isMac ? event.metaKey : event.ctrlKey; // ⌘ för Mac, Ctrl för Windows/Linux
+        let shortcommandForJson = "";
+
+        // Hantera Ctrl + Tab manuellt
+
+      setTimeout(() => {
+        if (keysPressed["Control"] && event.key === "Tab") {
+            shortcommandForJson = "Shortcut: CTRL/CMD + TAB";
+        }
+
+      }, 2000);
+
+        
+
+        // Hantera vanliga Ctrl/Cmd-kortkommandon (utan Shift)
+        if (ctrlOrCmd && !event.shiftKey) {
+            switch (event.key.toLowerCase()) {
+                case "w":
+                    shortcommandForJson = "Shortcut: CTRL/CMD + W";//funkar inte
+                    break;
+                case "t":
+                    shortcommandForJson = "Shortcut: CTRL/CMD + T";//funkar inte 
+                    break;
+                case "r":
+                    shortcommandForJson = "Shortcut: CTRL/CMD + R"; //funkar
+                    chrome.runtime.sendMessage({
+                      action: 'ctrl_r_pressed'
+                  });
+                    break;
+                case "s":
+                    shortcommandForJson = "Shortcut: CTRL/CMD + S";//funkar
+                    chrome.runtime.sendMessage({
+                      action: 'ctrl_s_pressed'
+                  });
+                    break;
+                case "d":
+                    shortcommandForJson = "Shortcut: CTRL/CMD + D";//funkar 
+                    chrome.runtime.sendMessage({
+                      action: 'ctrl_d_pressed'
+                  });
+                    break;
+                case "p":
+                    shortcommandForJson = "Shortcut: CTRL/CMD + P";//funkar
+                    this.isCtrlPPressed = true;
+                    break;
+                case "l":
+                    shortcommandForJson = "Shortcut: CTRL/CMD + L";//funkar 
+                    break;
+                case "c":
+                    shortcommandForJson = "Shortcut: CTRL/CMD + C";//funkar
+                    this.isCtrlCPressed = true;
+                    break;
+                case "v":
+                    shortcommandForJson = "Shortcut: CTRL/CMD + V";//funkar 
+                    this.isCtrlVPressed = true;
+                    break;
+            }
+        }
+
+        // Hantera Alt + Pil
+        if (event.altKey) {
+            switch (event.key) {
+                case "ArrowLeft":
+                    shortcommandForJson = "Shortcut: ALT + ←"; //funkar
+                    chrome.runtime.sendMessage({
+                      action: 'alt_arrow_pressed'
+                  });
+                    break;
+                case "ArrowRight":
+                    shortcommandForJson = "Shortcut: ALT + →";//funkar
+                    chrome.runtime.sendMessage({
+                      action: 'alt_arrow_pressed'
+                  });
+                    break;
+            }
+        }
+
+        // Hantera Ctrl + Shift-kortkommandon
+        if (ctrlOrCmd && event.shiftKey) {
+            switch (event.key.toLowerCase()) {
+                case "i":
+                    this.ctrlShiftI = true;
+                    shortcommandForJson = "Shortcut: CTRL/CMD + SHIFT + I";//funkar
+                    break;
+            }
+        }
+
+        // Skicka data om ett kortkommando upptäcktes
+        if (shortcommandForJson) {
+            this.sendToStorageForKeyboard(shortcommandForJson);
+        }
+    });
+
+    // Ta bort tangenter från `keysPressed` när de släpps
+    document.addEventListener("keyup", (event) => {
+        delete keysPressed[event.key];
+    });
+}
+
+
+
+
+
+// Starta lyssnaren
+
+
+
   sendToStorage(shortcommandForJson) {
      // Skicka data till storage.js för att spara det i chrome.storage.local
      chrome.runtime.sendMessage({
-      action: "save_shortcut",
+      action: "save_action_for_GUI",
       shortcut: shortcommandForJson
     }, function(response) {
-      console.log("Svar från storage.js:", response);
     });
   }
 
-  
+  sendToStorageForKeyboard(shortcommandForJson) {
+     // Skicka data till storage.js för att spara det i chrome.storage.local
+     chrome.runtime.sendMessage({
+      action: "save_shortcut_from_keyboard",
+      shortcut: shortcommandForJson
+    }, function(response) {
+    });
+  }
 }
 
 window.ShortcommandDiv = ShortcommandDiv;

@@ -82,6 +82,18 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
  * Om url inte är samma skrivs alt + ← / alt + → ut men kan även triggas när man byter flik
  */
 // Spara tidigare URL för varje flik
+
+let ctrlRPressed = false;
+let altArrowPressed = false;
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.action === 'ctrl_r_pressed') {
+        ctrlRPressed = true;
+    }
+    if (message.action === 'alt_arrow_pressed') {
+        altArrowPressed = true;
+    }
+});
+
 let previousUrls = {};
 
 // Lyssna på när en flik laddas om
@@ -92,7 +104,8 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         if (previousUrls[tabId] === tab.url) {
             console.log("🔄 Sidan laddades om. Skickar meddelande...");
             // Skicka meddelandet till content-script
-            console.log(this.flagForWebbsiteForCTRLR)
+            if (!ctrlRPressed) {
+
             if(!this.flagForWebbsiteForCTRLR){
                  chrome.tabs.sendMessage(tabId, {
                 action: "show_message",
@@ -102,6 +115,9 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
                     // console.warn("⚠️ Kunde inte skicka meddelande. Content-script kanske inte är laddat?");
                 }
             });
+            }}
+            else {
+                ctrlRPressed = false;
             }
             this.flagForWebbsiteForCTRLR = false;
                  
@@ -109,6 +125,8 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
         else {
 
+            if (!altArrowPressed) {
+                
             setTimeout(() => {
                 if(!this.isCtrlTVisible && !this.flagForWebbsiteForAlt){
                 chrome.tabs.sendMessage(tabId, {
@@ -124,7 +142,10 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
                 this.flagForWebbsiteForAlt = false;
             }, 1);
 
-                
+        } else {
+            altArrowPressed = false
+            
+        }
                
             
         }
@@ -156,6 +177,8 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
  * Lyssnar på när en flik stängs och skriver ut CTRL + W  
  * Finns event som lysnar på ifall tabs är borttagna, kontrollerar ifall det är tabben man är på  
  */
+
+
 chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
 
     // Om den stängda fliken var den aktiva, visa "CTRL + W"
@@ -183,7 +206,18 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
 /**
  * Lyssna efter att användaren bokmärker en sida 
  */
+
+let ctrlDPressed = false;
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.action === 'ctrl_d_pressed') {
+        ctrlDPressed = true;
+    }
+});
+
 chrome.bookmarks.onCreated.addListener((id, bookmark) => {
+
+    if (!ctrlDPressed) {
     chrome.tabs.sendMessage(activeTabId, {
         action: "show_message",
         text: "CTRL + D"
@@ -192,23 +226,42 @@ chrome.bookmarks.onCreated.addListener((id, bookmark) => {
             // console.warn("⚠️ Kunde inte skicka meddelande. Content-script kanske inte är laddat?");
         }
     });
+} else {
+    ctrlDPressed = false;
+}
 });
   
 
 /**
  * Hanterar när användaren laddar ner något och skriver ut CTRL + S
  */
-chrome.downloads.onCreated.addListener((downloadItem) => {
-    chrome.tabs.sendMessage(activeTabId, {
-        action: "show_message",
-        text: "CTRL + S"
-    }, () => {
-        if (chrome.runtime.lastError) {
-            // console.warn("⚠️ Kunde inte skicka meddelande. Content-script kanske inte är laddat?");
-        }
-    });
+let ctrlSPressed = false;
 
-  });
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.action === 'ctrl_s_pressed') {
+        ctrlSPressed = true;
+    }
+});
+
+chrome.downloads.onCreated.addListener((downloadItem) => {
+    if (!ctrlSPressed) {
+        chrome.tabs.sendMessage(activeTabId, {
+            action: "show_message",
+            text: "CTRL + S"
+        }, () => {
+            if (chrome.runtime.lastError) {
+                // console.warn("⚠️ Kunde inte skicka meddelande. Content-script kanske inte är laddat?");
+            }
+        });
+    } else {
+        ctrlSPressed = false; 
+    }
+});
+
+
+/**
+ * Lyssnar efter om användaren söker eller navigerar till en webbplats
+ */
   chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (changeInfo.url) {
         const url = new URL(changeInfo.url);
@@ -231,25 +284,51 @@ chrome.downloads.onCreated.addListener((downloadItem) => {
 });
 
 
-// Lyssnar på meddelanden från shortcommand_div.js och sparar kortkommandon
+// Lyssnar på meddelanden för GUI-användning
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.action === "save_shortcut") {
-        saveShortcutToStorage(message.shortcut);
-        sendResponse({ status: "Shortcut saved!" });
+    if (message.action === "save_action_for_GUI") {
+        saveShortcutToStorage(message.shortcut, "gui_actions");
+        sendResponse({ status: "GUI action saved!" });
+    } else {
+        sendResponse({ status: "Shortcut not saved!" });
     }
+    return true; // Låter Chrome vänta på asynkron lagring
 });
 
-// Funktion för att spara kortkommandon som en räknare
-function saveShortcutToStorage(shortcut) {
-    chrome.storage.local.get(["shortcuts"], function (result) {
-        let shortcuts = result.shortcuts || {}; // Hämta befintliga kortkommandon (som objekt)
+// Lyssnar på meddelanden för tangentbordsgenvägar
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.action === "save_shortcut_from_keyboard") {
+        saveShortcutToStorage(message.shortcut, "keyboard_shortcuts");
+        sendResponse({ status: "Keyboard shortcut saved!" });
+    }
+    return true; // Låter Chrome vänta på asynkron lagring
+});
 
-        // Om kortkommandot redan finns, öka räknaren, annars sätt den till 1
+// Funktion för att spara kortkommandon med en separat nyckel beroende på typ (GUI eller tangentbord)
+function saveShortcutToStorage(shortcut, storageKey) {
+    if (!shortcut) {
+        console.warn("⚠️ Försökte spara ett tomt kortkommando. Ignorerar.");
+        return;
+    }
+
+    chrome.storage.local.get([storageKey], function (result) {
+        if (chrome.runtime.lastError) {
+            console.error("❌ Fel vid hämtning av Chrome Storage:", chrome.runtime.lastError);
+            return;
+        }
+
+        let shortcuts = result[storageKey] || {}; // Hämta rätt lagringsnyckel
+
+        // Öka räknaren för kortkommandot
         shortcuts[shortcut] = (shortcuts[shortcut] || 0) + 1;
 
-        // Spara tillbaka uppdaterad data i Chrome Storage
-        chrome.storage.local.set({ shortcuts: shortcuts }, function () {
-            console.log(`✅ Kortkommando '${shortcut}' har nu använts ${shortcuts[shortcut]} gånger.`);
+        // Spara tillbaka uppdaterad data
+        chrome.storage.local.set({ [storageKey]: shortcuts }, function () {
+            if (chrome.runtime.lastError) {
+                console.error("❌ Fel vid sparande till Chrome Storage:", chrome.runtime.lastError);
+            } else {
+                console.log(`✅ ${storageKey.toUpperCase()} - '${shortcut}' har nu använts ${shortcuts[shortcut]} gånger.`);
+            }
         });
     });
 }
@@ -265,15 +344,21 @@ function saveShortcutToStorage(shortcut) {
 
 
 
+
+
   
 /** 
- * Om CTRL W skrivs ut ska inte ctrl tab skrivas ut -- FIXAD
- * Om CTRL T skrivs ut ska inte alt ← / alt → skrivas ut --FIXAD 
+
  * ifall muskordinater inte är undefined ska inte alt ← / alt → skrivas ut
- * CTRL R skrivs ut om man går direkt till en sida --FIXAD
- * alt skrivs ut om man går direkt till en sida --FIXAD
  * CTRL R skrivs ut 4 gånger typ
  * Hur ska man hantera ifall användaren går till newtab
+ * Se till så man inte blir promtar ifall man använder kortkommando
+ * ctrl w, ctrl t och ctrl tab fungerar inte
+ * om man bokmärker en ny sida skrivs ctrl d och l ut samtidigt, dessa reggar även både gui och keyboard
+ * ifall man bokmärker något som redan är bokmärkt skrivs ctrl l ut
+ * markering av text saknar funktionalitet
+ * inspectorn har ignet atm för kortkommandon vs gui
+ *  
  */
   
 

@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Hej-tillägg",
+  "name": "Shortcut-learner",
   "version": "1.0",
   "description": "Visar en hälsning nere i hörnet.",
   "permissions": [
@@ -13,6 +13,16 @@
     "scripting", 
     "storage"
   ],
+
+  "commands":{
+    "close_tab":{
+      "suggested_key":{
+        "default":"Ctrl+W",
+        "mac":"Command+W"
+      },
+      "description":"close tab"
+    }
+  },
 
   "omnibox": { "keyword": "sök" }, 
 
