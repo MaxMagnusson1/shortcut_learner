@@ -11,7 +11,8 @@
     "bookmarks",
     "downloads", 
     "scripting", 
-    "storage"
+    "storage",
+    "contextMenus"
   ],
 
   "commands":{
@@ -38,6 +39,7 @@
   },
 
   "action": {
+    "default_popup": "popup.html",
     "default_icon": "img/icon48.png",
     "default_title": "Klicka för att säga Hej!"
   },
@@ -45,9 +47,12 @@
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"], 
+      "exclude_matches": ["*://docs.google.com/document*"],
       "js": [
+        "js/popup.js",
         "js/shortcommand_div.js", 
         "js/content.js"
+
       ],
       "css": ["style.css"], 
       "run_at": "document_start"
