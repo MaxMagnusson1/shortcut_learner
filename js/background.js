@@ -5,9 +5,9 @@
 const tabsToRedirect = new Set(); // Håller koll på flikar som eventuellt ska omdirigeras
 
 chrome.tabs.onCreated.addListener((tab) => {
-    this.isCtrlTVisible = false;
-    this.isCtrlWVisible = false;
-    this.flagForWebbsiteForCTRLR = false;
+    // this.isCtrlTVisible = false;
+    // this.isCtrlWVisible = false;
+    // this.flagForWebbsiteForCTRLR = false;
 
     // Om det är en ny tom flik (chrome://newtab), markera den för eventuell omdirigering
     if (!tab.url || tab.url.startsWith("chrome://newtab")) {
@@ -31,16 +31,16 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
             // När Google laddas klart, visa "CTRL + T"
             chrome.tabs.onUpdated.addListener(function listener(updatedTabId, updatedChangeInfo, updatedTab) {
                 if (updatedTabId === tabId && updatedChangeInfo.status === "complete" && updatedTab.url.includes("https://www.google.com")) {
-                    this.isCtrlTVisible = true;
+                    // this.isCtrlTVisible = true;
 
-                    chrome.tabs.sendMessage(tabId, {
-                        action: "show_message",
-                        text: "CTRL + T"
-                    }, () => {
-                        if (chrome.runtime.lastError) {
-                            // console.warn("⚠️ Kunde inte skicka meddelande. Content-script kanske inte är laddat?");
-                        }
-                    });
+                    // chrome.tabs.sendMessage(tabId, {
+                    //     action: "show_message",
+                    //     text: "CTRL + T"
+                    // }, () => {
+                    //     if (chrome.runtime.lastError) {
+                    //         // console.warn("⚠️ Kunde inte skicka meddelande. Content-script kanske inte är laddat?");
+                    //     }
+                    // });
 
                     // Ta bort event listenern för att undvika att det körs flera gånger
                     chrome.tabs.onUpdated.removeListener(listener);
@@ -61,36 +61,36 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 // Lyssnar på när användaren byter aktiv flik (byter mellan existerande flikar)
 chrome.tabs.onActivated.addListener((activeInfo) => {
 
-    // Hämta information om den aktiva fliken
-    chrome.tabs.get(activeInfo.tabId, (tab) => {
-        if (chrome.runtime.lastError) {
-            console.warn("⚠️ Kunde inte hämta flikinformation.");
-            return;
-        }
+    // // Hämta information om den aktiva fliken
+    // chrome.tabs.get(activeInfo.tabId, (tab) => {
+    //     if (chrome.runtime.lastError) {
+    //         console.warn("⚠️ Kunde inte hämta flikinformation.");
+    //         return;
+    //     }
 
-        // Skicka meddelande till den aktiva fliken (för flikbyte)
-        if(!this.isCtrlWVisible){
-            console.log(ctrl_pressed);
-            if (!ctrl_pressed){
-                console.log("HEJSAN");
-            chrome.tabs.sendMessage(tab.id, {
-            action: "show_message",
-            text: "CTRL + TAB"
-        }, () => {
-            if (chrome.runtime.lastError) {
-                // console.warn("⚠️ Inga mottagare för meddelandet. Content-script kanske inte är laddat?");
-            }
-        });
-            }else {
-                ctrl_pressed = false;
-            }
+    //     // Skicka meddelande till den aktiva fliken (för flikbyte)
+    //     if(!this.isCtrlWVisible){
+    //         console.log(ctrl_pressed);
+    //         if (!ctrl_pressed){
+    //             console.log("HEJSAN");
+    //         chrome.tabs.sendMessage(tab.id, {
+    //         action: "show_message",
+    //         text: "CTRL + TAB"
+    //     }, () => {
+    //         if (chrome.runtime.lastError) {
+    //             // console.warn("⚠️ Inga mottagare för meddelandet. Content-script kanske inte är laddat?");
+    //         }
+    //     });
+    //         }else {
+    //             ctrl_pressed = false;
+    //         }
        
-        }
-        this.isCtrlWVisible = false;
+    //     }
+    //     this.isCtrlWVisible = false;
         
 
 
-    });
+    // });
 });
 
 /**
@@ -121,39 +121,39 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         if (previousUrls[tabId] === tab.url) {
             // CTRL + R logik (om sidan laddades om)
             if (!ctrlRPressed) {
-                if (!this.flagForWebbsiteForCTRLR) {
+           //     if (!this.flagForWebbsiteForCTRLR) {
                     chrome.tabs.sendMessage(tabId, {
                         action: "show_message",
                         text: "CTRL + R"
                     }, () => {
                         if (chrome.runtime.lastError) {}
                     });
-                }
+              //  }
             } else {
                 ctrlRPressed = false;
             }
-            this.flagForWebbsiteForCTRLR = false;
+         //   this.flagForWebbsiteForCTRLR = false;
         } else {
          
             // Annars, om en sidnavigering skett på annat sätt (t.ex. ALT + ←)
-            if(this.y >=10){
+          //  if(this.y >=10){
                   if (!altArrowPressed) {
                 setTimeout(() => {
-                    if (!this.isCtrlTVisible && !this.flagForWebbsiteForAlt) {
+                    // if (!this.flagForWebbsiteForAlt) {
                         chrome.tabs.sendMessage(tabId, {
                             action: "show_message",
                             text: "ALT + ← / ALT + →"
                         }, () => {
                             if (chrome.runtime.lastError) {}
                         });
-                    }
-                    this.isCtrlTVisible = false;
-                    this.flagForWebbsiteForAlt = false;
+                    // }
+                    // this.isCtrlTVisible = false;
+                    // this.flagForWebbsiteForAlt = false;
                 }, 1);
             } else {
                 altArrowPressed = false;
             }
-            }
+        //    }
         }
 
         // Uppdatera sparad URL för fliken
@@ -195,52 +195,38 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
 
 let ctrl_pressed = false;   
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    
-        // Hämta senaste sparade nyckeln från storage
-        chrome.storage.local.get("saved_key", (result) => {
-            let lastKey = result.saved_key; // Senast lagrade tangent
-            
-            if (lastKey === "Tab" || lastKey === "Control") {
-                ctrl_pressed = true;
-                console.log("Bakgrundsskriptet mottog och validerade: CTRL + key pressed");
-            } else {
-                console.log("Senast sparade nyckeln är inte Tab eller Control. Ingen åtgärd.");
-            }
-        });
-    
-});
 
 
 
-chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
 
-    // Om den stängda fliken var den aktiva, visa "CTRL + W"
-    if (tabId === activeTabId) {
+// chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
 
-        // Hitta en annan öppen flik att skicka meddelandet till
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            if (tabs.length > 0) {
-                this.isCtrlWVisible = true;
+//     // Om den stängda fliken var den aktiva, visa "CTRL + W"
+//     if (tabId === activeTabId) {
+
+//         // Hitta en annan öppen flik att skicka meddelandet till
+//         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+//             if (tabs.length > 0) {
+//                 this.isCtrlWVisible = true;
                 
-                if (!ctrl_pressed){
-                     chrome.tabs.sendMessage(tabs[0].id, {
-                    action: "show_message",
-                    text: "CTRL + W"
-                }, () => {
-                    if (chrome.runtime.lastError) {
-                        // console.warn("⚠️ Kunde inte skicka meddelande. Content-script kanske inte är laddat?");
-                    }
-                });
-                } else 
-                {
-                    ctrl_pressed = false;
-                }
+//                 if (!ctrl_pressed){
+//                      chrome.tabs.sendMessage(tabs[0].id, {
+//                     action: "show_message",
+//                     text: "CTRL + W"
+//                 }, () => {
+//                     if (chrome.runtime.lastError) {
+//                         // console.warn("⚠️ Kunde inte skicka meddelande. Content-script kanske inte är laddat?");
+//                     }
+//                 });
+//                 } else 
+//                 {
+//                     ctrl_pressed = false;
+//                 }
 
-            }
-        });
-    }
-});
+//             }
+//         });
+//     }
+// });
 
 
 /**
@@ -317,27 +303,14 @@ chrome.downloads.onCreated.addListener((downloadItem) => {
             // Det är en sökning
         } else {
             // Det är en direkt navigering till en webbplats
-            this.flagForWebbsiteForCTRLR = true;
-            this.flagForWebbsiteForAlt = true;
+            // this.flagForWebbsiteForCTRLR = true;
+            // this.flagForWebbsiteForAlt = true;
         }
       }
     }
 );
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.action === "latest_key_pressed") {
-        // console.log("Mottog tangent:", message.message); // Fixat: Läser nu message.key istället för message.shortcut
 
-        saveLatestPressedKey(message.message, "saved_key").then(() => {
-            sendResponse({ status: "Key saved!", latestKey: message.message });
-        }).catch((error) => {
-            sendResponse({ status: "Error saving key!", error: error.message });
-        });
-    } else {
-        sendResponse({ status: "Key not saved!" });
-    }
-    return true; // Låter Chrome vänta på asynkron lagring
-});
 
 
 
@@ -399,7 +372,7 @@ function saveLatestPressedKey(value, storageKey) {
             if (chrome.runtime.lastError) {
                 reject(new Error(chrome.runtime.lastError));
             } else {
-                 console.log(`Senaste tangenttryck sparad: ${value}`);
+                //  console.log(`Senaste tangenttryck sparad: ${value}`);
                 resolve();
             }
         });
@@ -409,6 +382,91 @@ function saveLatestPressedKey(value, storageKey) {
 
 
 
+
+
+
+
+//**
+//DATABASHANDLER
+//  */
+
+
+
+
+
+// Funktion för att hämta gui_actions och keyboard_shortcuts från Chrome Storage och returnera som JSON
+function fetchStoredDataAsJson() {
+    return new Promise((resolve, reject) => {
+        chrome.storage.local.get(['gui_actions', 'keyboard_shortcuts'], function (result) {
+            if (chrome.runtime.lastError) {
+                reject(new Error(chrome.runtime.lastError));
+                return;
+            }
+
+            const guiActions = result.gui_actions || {};
+            const keyboardShortcuts = result.keyboard_shortcuts || {};
+
+            const data = {
+                gui_actions: guiActions,
+                keyboard_shortcuts: keyboardShortcuts
+            };
+
+            const isEmpty = Object.keys(guiActions).length === 0 && Object.keys(keyboardShortcuts).length === 0;
+
+            resolve({ data, isEmpty });
+        });
+    });
+}
+
+// Funktion för att skicka data till PHP-filen
+
+function sendDataToServer(data) {
+    //loggning av data, datan stämmer
+    console.log(data)
+    console.log(JSON.stringify(data))
+    console.log('Förbereder att skicka data:', JSON.stringify(data, null, 2)); 
+    fetch('https://localhost/shortcut_learner/database.php', { 
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+     
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Nätverksresponsen var inte OK: ' + response.statusText);
+        }
+        return response.text();
+    })
+    .then(result => {
+        // console.log('Serverns svar:', result);
+    })
+    .catch(error => {
+        console.error('Fel vid sändning av data till servern:', error);
+    });
+}
+
+
+// Funktion för att logga data som JSON och skicka till servern om det inte är tomt
+function logAndSendStoredData() {
+    fetchStoredDataAsJson().then(result => {
+        if (!result.isEmpty) {
+            // console.log("Hämtade data som JSON:", JSON.stringify(result.data, null, 2));
+            sendDataToServer(result.data);
+        } else {
+            console.log("Ingen data att logga.");
+        }
+    }).catch(error => {
+        console.error("Fel vid hämtning av data:", error);
+    });
+}
+
+// Anropa logAndSendStoredData var 10:e sekund
+setInterval(logAndSendStoredData, 10000);
+
+// Exempel: Anropa funktionen direkt vid start
+// logAndSendStoredData();
 
   
 /** 
@@ -426,6 +484,30 @@ function saveLatestPressedKey(value, storageKey) {
  * stängt av det för google docs för det skapar mycket problem
  * CTRL N 
  * 
+ * 
+ * alt knapparna visas inte 
+ * 
+ * Dessa kommer kunna mätas utan problem med säkerhet 
+ * CTRL + R
+ * CTRL + W
+ * CTRL + S
+ * CTRL + D
+ * CTRL + P
+ * CTRL + C
+ * CTRL + V 
+ * CTRL + X
+ * Markeing av ord 
+ * CTRL + shift i
+ * 
+ * Dessa kommer kunna mätas med keyboard shortcuts men inte via GUI
+ * CTRL + F
+ * CTRL + Z
+ * CTRL + Y
+ * CTRL + A
+ * CTRL + +
+ * CTRL + -
+ * CTRL + 0
+ * CTRL + L
  */
   
 

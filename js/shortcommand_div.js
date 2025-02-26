@@ -19,7 +19,7 @@ class ShortcommandDiv {
     this.isPromptVisible = false; // Flytta initialiseringen hit
     this.isCtrlShiftPressed = false;
     this.setUpListnersForTabAndW();
-
+    this.testSomeListners(); 
     document.addEventListener("DOMContentLoaded", () => {
       this.createDivContainer(); // Skapa container efter att DOM är redo
       this.setupSelectAllListener();
@@ -28,8 +28,40 @@ class ShortcommandDiv {
     }
    );   
   }
+  testSomeListners = () => {
 
+  //   document.addEventListener("keydown", (event) => {
+  //     if (event.ctrlKey) {
 
+  //       switch (event.key.toLowerCase()) {
+  //         case "f":
+  //           console.log("ctrl +f "); //funkar 
+  //           break;CTR
+  //         case "z":
+  //           console.log("ctrl + z"); //funkar 
+  //           break;
+  //         case "y":
+  //           console.log("ctrl + y"); //funkar 
+  //           break;
+  //         case "a":
+  //           console.log("ctrl + a"); //funkar 
+  //           break;
+  //         case "+":
+  //           console.log("ctrl + +"); //funkar 
+  //           break;
+  //         case "-":
+  //           console.log("ctrl - -"); //funkar 
+  //           break;
+  //         case "0":
+  //           console.log("ctrl + 0"); //funkar 
+  //           break;
+  //       }
+  //     }
+
+    
+  // });
+  }
+  
   createDivContainer() {
     if (!this.divContainer) {
       this.divContainer = document.createElement("div");
@@ -187,40 +219,40 @@ setTextInDiv(text) {
      *Använder timeout för att förhindra att denna promtar vid andra tillfällen, flaggan måste hinna registreras
      */
 
-    window.addEventListener("blur", () => {
-      document.addEventListener("mousemove", function(event) {
-        this.X_axis = event.clientX;
-        this.Y_axis = event.clientY;
+  //   window.addEventListener("blur", () => {
+  //     document.addEventListener("mousemove", function(event) {
+  //       this.X_axis = event.clientX;
+  //       this.Y_axis = event.clientY;
 
-        chrome.runtime.sendMessage({
-          action: 'mouse_moved',
-          x: this.X_axis,
-          y: this.Y_axis
-        }
-      );
-    }
-  );
+  //       chrome.runtime.sendMessage({
+  //         action: 'mouse_moved',
+  //         x: this.X_axis,
+  //         y: this.Y_axis
+  //       }
+  //     );
+  //   }
+  // );
 
-      setTimeout(() => {
+  //     setTimeout(() => {
 
-        if (this.Y_axis<=10 || !this.Y_axis) {
-                if (!this.isCtrlDPressed && !this.ctrlLNotShow && !this.isCtrlLPressed) { 
+  //       if (this.Y_axis<=10 || !this.Y_axis) {
+  //               if (!this.isCtrlDPressed && !this.ctrlLNotShow && !this.isCtrlLPressed) { 
 
-                let shortcommandForJson ="CTRL/CMD + L";
-                let shortcommand = "CTRL + L";
-                this.controlIfToPromt(shortcommand);
-                this.sendToStorage(shortcommandForJson);
-                }
-                else {
-                  this.isCtrlDPressed = false;
-                  this.ctrlLNotShow = false;
-                  this.isCtrlLPressed = false;
-                }
-              }
-              else return;
-      }, 200);
-    }
-   );
+  //               let shortcommandForJson ="CTRL/CMD + L";
+  //               let shortcommand = "CTRL + L";
+  //               this.controlIfToPromt(shortcommand);
+  //               this.sendToStorage(shortcommandForJson);
+  //               }
+  //               else {
+  //                 this.isCtrlDPressed = false;
+  //                 this.ctrlLNotShow = false;
+  //                 this.isCtrlLPressed = false;
+  //               }
+  //             }
+  //             else return;
+  //     }, 200);
+  //   }
+  //  );
   }
 
 /**
@@ -294,21 +326,21 @@ setTextInDiv(text) {
           console.log(message.text);
 
           switch (message.text) {
-            case "CTRL + W":
-              shortcommand = `${this.platformCommand} + W`;
-              shortcommandForJson = "CTRL/CMD + W";
-              break;
+            // case "CTRL + W":
+            //   shortcommand = `${this.platformCommand} + W`;
+            //   shortcommandForJson = "CTRL/CMD + W";
+            //   break;
 
-            case "CTRL + TAB":
-              this.ctrlLNotShow = true; 
-              shortcommand = `${this.platformCommand} + TAB`;
-              shortcommandForJson = "CTRL/CMD + TAB";
-              break;
+            // case "CTRL + TAB":
+            //   this.ctrlLNotShow = true; 
+            //   shortcommand = `${this.platformCommand} + TAB`;
+            //   shortcommandForJson = "CTRL/CMD + TAB";
+            //   break;
 
-            case "CTRL + T":
-              shortcommand = `${this.platformCommand} + T`;
-              shortcommandForJson = "CTRL/CMD + T";
-              break;
+            // case "CTRL + T":
+            //   shortcommand = `${this.platformCommand} + T`;
+            //   shortcommandForJson = "CTRL/CMD + T";
+            //   break;
 
             case "CTRL + R":
               shortcommand = `${this.platformCommand} + R`;
@@ -389,16 +421,16 @@ setTextInDiv(text) {
             // console.log(event.key);
             switch (event.key.toLowerCase()) {
 
-                case "tab":
-                    shortcommandForJson = "Shortcut: CTRL/CMD + TAB"; //funkar inte
-                    break;
-                case "w":
-                    shortcommandForJson = "Shortcut: CTRL/CMD + W";//funkar inte
-                    break;
-                case "t":
-                    shortcommandForJson = "Shortcut: CTRL/CMD + T";//funkar inte 
-                    console.log("tjenare")
-                    break;
+                // case "tab":
+                //     shortcommandForJson = "Shortcut: CTRL/CMD + TAB"; //funkar inte
+                //     break;
+                // case "w":
+                //     shortcommandForJson = "Shortcut: CTRL/CMD + W";//funkar inte
+                //     break;
+                // case "t":
+                //     shortcommandForJson = "Shortcut: CTRL/CMD + T";//funkar inte 
+                //     console.log("tjenare")
+                //     break;
                 case "r":
                     shortcommandForJson = "Shortcut: CTRL/CMD + R"; //funkar
                     chrome.runtime.sendMessage({
@@ -422,17 +454,12 @@ setTextInDiv(text) {
                     shortcommandForJson = "Shortcut: CTRL/CMD + P";//funkar
                     this.isCtrlPPressed = true;
                     break;
-                case "l":
-                    shortcommandForJson = "Shortcut: CTRL/CMD + L";//funkar 
-                    this.isCtrlLPressed = true; 
-                    break;
+            
                 case "c":
                     shortcommandForJson = "Shortcut: CTRL/CMD + C";//funkar
                     this.isCtrlCPressed = true;
                     break;
                 case "v":
-                  let hej = document.getElementById("hej");
-                  console.log(hej);
                     shortcommandForJson = "Shortcut: CTRL/CMD + V";//funkar 
                     this.isCtrlVPressed = true;
                     break;
@@ -440,6 +467,35 @@ setTextInDiv(text) {
                 case "x":
                     shortcommandForJson = "Shortcut: CTRL/CMD + X";//funkar
                     this.isCtrlXPressed = true;
+                    break;
+
+                /**
+                 * nya kortkommandon som inte mäts via gui
+                 */
+
+                case "f":
+                    shortcommandForJson = "Shortcut: CTRL/CMD + F";//funkar
+                    break;
+                case "z":
+                    shortcommandForJson = "Shortcut: CTRL/CMD + Z";//funkar
+                    break;
+                case "y":
+                    shortcommandForJson = "Shortcut: CTRL/CMD + Y";//funkar
+                    break;
+                case "a":
+                    shortcommandForJson = "Shortcut: CTRL/CMD + A";//funkar
+                    break;
+                case "+":
+                    shortcommandForJson = "Shortcut: CTRL/CMD + +";//funkar
+                    break;
+                case "-":
+                    shortcommandForJson = "Shortcut: CTRL/CMD + -";//funkar
+                    break;
+                case "0":
+                    shortcommandForJson = "Shortcut: CTRL/CMD + 0";//funkar
+                    break;
+                case "l":
+                    shortcommandForJson = "Shortcut: CTRL/CMD + L";//funkar
                     break;
             }
         }

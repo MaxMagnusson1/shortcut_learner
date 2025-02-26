@@ -12,7 +12,8 @@
     "downloads", 
     "scripting", 
     "storage",
-    "contextMenus"
+    "contextMenus", 
+    "alarms"
   ],
 
   "commands":{
@@ -29,7 +30,8 @@
 
 
   "background": {
-    "service_worker": "js/background.js"
+    "service_worker": "js/background.js", 
+    "type": "module"
   },
 
   "icons": {
@@ -59,7 +61,7 @@
     }
   ],
 
-  "host_permissions": ["http://*/*", "https://*/*"],
+  "host_permissions": ["http://*/*", "https://*/*", "https://min-databas.com/*"],
 
   "web_accessible_resources": [
     {

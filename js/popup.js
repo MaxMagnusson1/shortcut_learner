@@ -1,20 +1,20 @@
-document.addEventListener("load", function () {
+document.addEventListener("DOMContentLoaded", function () {
     // let hej = document.getElementById("hej");
     // console.log(hej);
     
     let startTime = new Date("2025-02-25T13:25:00").getTime(); // När det ska bli synligt
     let endTime = new Date("2026-02-25T11:48:00").getTime(); // När det ska bli osynligt igen
-    var y= document.getElementById("hej"); 
-    console.log(y);
+    // var y= document.getElementById("hej"); 
+    // console.log(y);
     function checkTime() {
         let now = new Date().getTime();
         let isVisible = now >= startTime && now <= endTime; // true om inom tidsfönstret, annars false
   
-        console.log("isPromptsVisible:", isVisible);
+        // console.log("isPromptsVisible:", isVisible);
   
         // Spara värdet i chrome.storage.local
         chrome.storage.local.set({ isPromptsVisible: isVisible }, () => {
-            console.log("🔄 Uppdaterade isPromptsVisible i storage:", isVisible);
+            // console.log("🔄 Uppdaterade isPromptsVisible i storage:", isVisible);
         });
   
         let linkElement = document.getElementById("shortcutLink");
