@@ -218,6 +218,7 @@ setTextInDiv(text) {
      *Kontrollerar ifall något trycker på adressfältet, fungerar inte som det ska 
      *Använder timeout för att förhindra att denna promtar vid andra tillfällen, flaggan måste hinna registreras
      */
+<<<<<<< Updated upstream
 
   //   window.addEventListener("blur", () => {
   //     document.addEventListener("mousemove", function(event) {
@@ -253,6 +254,13 @@ setTextInDiv(text) {
   //     }, 200);
   //   }
   //  );
+=======
+    window.addEventListener("blur", (e) => {
+      console.log("blur", e);
+      let shortcommand = "CTRL + L";
+      this.setTextInDiv(shortcommand);
+    });
+>>>>>>> Stashed changes
   }
 
 /**
