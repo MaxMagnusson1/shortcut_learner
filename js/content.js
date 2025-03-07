@@ -1,22 +1,18 @@
 class ShortCommandNotifier {
     /**
-     * Contructor för shortcommandnotifier klassen
+     * Contructor för shortcommandnotifier klassen, sätter två variaber, gör kallar  detectOS för att kontrollera OS, kallar på klass för att skapa 
+     * Div:et som ska visas samt kallar på funktionen checkAndSaveId som kontrollerar om anvädndaren har ett id 
      */
     constructor() {
         this.devtoolsOpen = false;
         this.shortcutUsed = false; 
         this.os = this.detectOS();
-
-        // Skapa en div för att visa texten
         this.SCDiv = new ShortcommandDiv(this.os);
-
-        // Kontrollera och spara värde i chrome storage
         this.checkAndSaveId();
     }
 
     /**
      * Kontrollerar vilket operativsystem användaren använder
-     * @returns {String} - Returnerar vilket operativsystem använd
      */
     detectOS() {
         const platform = navigator.userAgent.toLowerCase();
@@ -27,7 +23,6 @@ class ShortCommandNotifier {
 
     /**
      * Genererar en slumpmässig sträng med 5 bokstäver
-     * @returns {String} - Slumpmässig sträng med 5 bokstäver
      */
     generateRandomString() {
         const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
@@ -39,19 +34,19 @@ class ShortCommandNotifier {
     }
 
     /**
-     * Kontrollera om "id" finns i chrome storage, om inte, skapa och spara det
+     * Kontrollera om "id" finns i chrome storage, om inte, skapa och spara det. Kallar på genereateRandomString för att skapa en slumpmässig sträng,
+     * sätter sedan ihop det med stringen från dateobjektet. Sparar sedan id i chrome storage
      */
     checkAndSaveId() {
         chrome.storage.local.get(['id'], (result) => {
             if (!result.id) {
-                const timestamp = Date.now(); // Använd millisekunder
+                const timestamp = Date.now(); 
                 const randomString = this.generateRandomString();
                 const id = `${timestamp}-${randomString}`;
                 chrome.storage.local.set({ id: id }, () => {
-                    console.log(`Sparade id i chrome storage: ${id}`);
                 });
             } else {
-                console.log(`Id finns redan i chrome storage: ${result.id}`);
+                // console.log(`Id finns redan i chrome storage: ${result.id}`);
             }
         });
     }

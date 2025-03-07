@@ -16,17 +16,6 @@
     "alarms"
   ],
 
-  "commands":{
-    "close_tab":{
-      "suggested_key":{
-        "default":"Ctrl+W",
-        "mac":"Command+W"
-      },
-      "description":"close tab"
-    }
-  },
-
-  "omnibox": { "keyword": "sök" }, 
 
 
   "background": {
@@ -35,14 +24,14 @@
   },
 
   "icons": {
-    "16": "img/icon16.png",
-    "48": "img/icon48.png",
-    "128": "img/icon128.png"
+    "16": "img/iconimg.svg",
+    "48": "img/iconimg.svg",
+    "128": "img/iconimg.svg"
   },
 
   "action": {
     "default_popup": "popup.html",
-    "default_icon": "img/icon48.png",
+    "default_icon": "img/s-icon.png",
     "default_title": "Klicka för att säga Hej!"
   },
 
@@ -51,7 +40,6 @@
       "matches": ["http://*/*", "https://*/*"], 
       "exclude_matches": ["*://docs.google.com/document*"],
       "js": [
-        "js/popup.js",
         "js/shortcommand_div.js", 
         "js/content.js"
 
@@ -61,7 +49,7 @@
     }
   ],
 
-  "host_permissions": ["http://*/*", "https://*/*", "https://min-databas.com/*"],
+  "host_permissions": ["http://*/*", "https://*/*"],
 
   "web_accessible_resources": [
     {

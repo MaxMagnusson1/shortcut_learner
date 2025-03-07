@@ -6,34 +6,102 @@
     color: white;
     padding: 10px;
     border-radius: 5px;
-    font-size: 16px;
     z-index: 9999;
     width: fit-content;
     height: fit-content;
-    transition: all 0.3s ease-in-out;
+    transition: transform 3s ease-in-out;
 }
 
 #shortcommandDivContainer{
     position: fixed;
-    bottom: 10px; 
+    bottom: -40px; 
     right: 10px; 
+    z-index: 9999;
     display: flex;
     flex-direction: column;
     gap: 5px;
+    transition: all 0.3s ease-in-out;
+    font-size: 20px;
+    font-family: bold;
 }
 
-.shortcommandDiv{
-    background: rgba(0, 0, 0, 0.8);
+#shortcommandDivContainer.move-up {
+    transform: translateY(-50px); /* Flytta 50 pixlar uppåt */
+}
+
+
+
+.shortcommandDiv {
+    background: blue;
+    background-size: 200% 100%;
     color: white;
     padding: 10px;
     border-radius: 5px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
     opacity: 1;
-    transition: opacity 0.5s ease;
+    transition: opacity 0.5s ease, transform 3s ease-in-out;
     text-align: right;
     width: fit-content;
+    animation: shimmer 1.5s 1;
+    animation-fill-mode: none; /* Återställ bakgrunden efter animationen */
 }
 
+@keyframes shimmer {
+    0% {
+        background: linear-gradient(90deg, blue 25%, rgba(255, 255, 255, 0.2) 50%, blue 75%);
+        background-size: 200% 100%;
+        background-position: -200% 0;
+    }
+    100% {
+        background: blue;
+        background-size: 200% 100%;
+        background-position: 200% 0;
+    }
+}
+
+
+#shortcutLink{
+    align-items: center;
+    background-color: initial;
+    background-image: linear-gradient(#464d55, #25292e);
+    border-radius: 8px;
+    border-width: 0;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, .1),0 3px 6px rgba(0, 0, 0, .05);
+    box-sizing: border-box;
+    color: #fff;
+    cursor: pointer;
+    display: inline-flex;
+    flex-direction: column;
+    font-family: expo-brand-demi,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+    font-size: 13px;
+    height: 46px;
+    justify-content: center;
+    line-height: 1;
+    margin: 0;
+    outline: none;
+    overflow: hidden;
+    padding: 0 10px;
+    text-align: center;
+    text-decoration: none;
+    /* transform: translate3d(0, 0, 0); */
+    /* transition: all 150ms; */
+    vertical-align: baseline;
+    white-space: nowrap;
+    user-select: none;
+    -webkit-user-select: none;
+    /* touch-action: manipulation; */
+  }
+  
+  #shortcutLink:hover {
+    box-shadow: rgba(0, 1, 0, .2) 0 2px 8px;
+    opacity: .85;
+  }
+ 
+  #countdownTimer{
+    color: black;
+    font-family: expo-brand-demi,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+    font-size:8px; 
+  }
 
 /*
     Design för popup-fönstret

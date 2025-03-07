@@ -19,7 +19,7 @@ class ShortcommandDiv {
     this.isPromptVisible = false; // Flytta initialiseringen hit
     this.isCtrlShiftPressed = false;
     this.setUpListnersForTabAndW();
-    this.testSomeListners(); 
+    // this.detectIfdimensionIsOpen(); 
     document.addEventListener("DOMContentLoaded", () => {
       this.createDivContainer(); // Skapa container efter att DOM är redo
       this.setupSelectAllListener();
@@ -28,45 +28,24 @@ class ShortcommandDiv {
     }
    );   
   }
-  testSomeListners = () => {
 
-  //   document.addEventListener("keydown", (event) => {
-  //     if (event.ctrlKey) {
-
-  //       switch (event.key.toLowerCase()) {
-  //         case "f":
-  //           console.log("ctrl +f "); //funkar 
-  //           break;CTR
-  //         case "z":
-  //           console.log("ctrl + z"); //funkar 
-  //           break;
-  //         case "y":
-  //           console.log("ctrl + y"); //funkar 
-  //           break;
-  //         case "a":
-  //           console.log("ctrl + a"); //funkar 
-  //           break;
-  //         case "+":
-  //           console.log("ctrl + +"); //funkar 
-  //           break;
-  //         case "-":
-  //           console.log("ctrl - -"); //funkar 
-  //           break;
-  //         case "0":
-  //           console.log("ctrl + 0"); //funkar 
-  //           break;
-  //       }
-  //     }
-
-    
-  // });
-  }
   
   createDivContainer() {
     if (!this.divContainer) {
       this.divContainer = document.createElement("div");
       this.divContainer.id = "shortcommandDivContainer";
+      this.divContainer.classList.add("move-up");
       document.body.appendChild(this.divContainer);
+      document.addEventListener("mousemove", (event) => {
+        // console.log("mouse moved");
+        if (!event.y || !event.x) {return}
+
+        else {
+        //     this.divContainer.style.left = `${event.pageX + 10}px`;
+        //  this.divContainer.style.top = `${event.pageY + 10}px`;
+        }
+       
+      });
     }
   }
 
@@ -77,18 +56,19 @@ class ShortcommandDiv {
 setTextInDiv(text) {
   const newDiv = document.createElement("div");
   newDiv.className = "shortcommandDiv";
+  newDiv.classList.add("move-up");
   newDiv.textContent = text;
 
-
+ 
   // Lägg till den nya div:en i containern
   this.divContainer.appendChild(newDiv);
 
   // Ta bort div:en efter 5 sekunder
   setTimeout(() => {
-    newDiv.style.opacity = "0"; // Gör div:en osynlig
+    newDiv.style.opacity = "0"; 
     setTimeout(() => {
-      newDiv.remove(); // Ta bort div:en från DOM
-    }, 500); // Vänta tills transition är klar
+      newDiv.remove(); 
+    }, 500); 
   }, 5000);
 }
 
@@ -101,6 +81,10 @@ setTextInDiv(text) {
     }, 5000);
   }
 
+  /**
+   * Lyssnar efter ifall någon markerar text på sidan
+   */
+
   setupSelectAllListener() {
     let timeoutId = null;
     let lastClickTime = 0;
@@ -110,90 +94,131 @@ setTextInDiv(text) {
         const now = Date.now();
         
         if (now - lastClickTime < 400) {
-            clickCount++; // Räkna antal klick inom kort tid
+            clickCount++; 
         } else {
-            clickCount = 1; // Om det gått för lång tid, börja om räkningen
+            clickCount = 1; 
         }
         
         lastClickTime = now;
     });
 
+    /**
+     * Eventlyssnare för om det är en dubbelklick eller trippelklick eller om texten är markerad genom att dra, kollar om det är mer än 1 ord som är markerat
+     */
     document.addEventListener("selectionchange", () => {
         clearTimeout(timeoutId);
 
         timeoutId = setTimeout(() => {
+          let message = "";
+
             if (!this.isPromptVisible) {
                 const selection = window.getSelection();
                 if (!selection || selection.rangeCount === 0) return;
 
                 const selectedText = selection.toString().trim();
-                if (selectedText.length === 0) return; // Ingen text markerad
+                if (selectedText.length === 0) return; 
 
-                // 🛑 Om det är dubbelklick eller trippelklick, gör ingenting
-                if (clickCount >= 2) {
-                    console.log("🔇 Ignorerar dubbel/trippelklick");
+                if (clickCount == 2) {
+                    message = "Shortcut: Dubbelklick"
+                    this.sendToStorageForKeyboard(message);
+                    return; 
+                }
+                else if (clickCount >= 3) {
+                    message = "Shortcut: Trippelklick";
+                    this.sendToStorageForKeyboard(message);
                     return;
                 }
 
-                let message = "";
 
                 if (selectedText.split(" ").length === 1) {
-                    // 🟢 Ett enda ord har markerats genom att dra
-                    message = "Double-click to select a word.";
+                    message = "Dubbelklicka för ett ord.";
                 } else {
-                    // 🟢 Flera ord eller en hel rad har markerats genom att dra
-                    message = "Triple-click for one line.";
+                    message = "Trippelklicka för en paragraf.";
                 }
 
                 this.isPromptVisible = true;
-                console.log("📝 Meddelande:", message);
                 this.sendToStorage(message);
                 this.controlIfToPromt(message);
 
                 setTimeout(() => {
                     this.isPromptVisible = false;
-                }, 5000);
+                }, 2000);
             }
         }, 300);
     });
 }
 
 
+/**
+ * Funktion för att logga ifall använder går in i responsivitets läge 
+ */
+// detectIfdimensionIsOpen(){
+//   var checkFlag = true;
+//   window.addEventListener("resize", () => {
+
+//     if(navigator.userAgent.includes("Windows") && window.addEventListener("mousemove", (event) => {})){
+//       console.log("retuerning");
+//       return; 
+//     }
+//     else {
+
+//       if (!checkFlag) {
+//         return;
+//       }
+//       checkFlag = false;
+
+//       console.log("prompting");
+//       this.shortcommandForJson = "CTRL/CMD + SHIFT + M";
+//       this.controlIfToPromt(`${this.platformCommand} + SHIFT + M`);
+//       this.sendToStorage(this.shortcommandForJson);
+      
+//     }
+//     setTimeout(() => {
+//       checkFlag = true;
+//     }, 5000); // <-- Stängande parentes är tillagd här!
+    
+//   }
+
+// );
+// }
   /**
    * Kontrollerar ifall inspectorn öppnas, baseras på om fönstret ändras i storlek
    */
   detectDevTools() {
-    const checkDevTools = () => {
+    // window.addEventListener("resize", () => {
+    //   console.log("Fönsterstorlek ändrad");
+    //     console.log(this.isCtrlShiftPressed); 
+    //     console.log(navigator.userAgentData);
+    //     console.log(navigator.userAgent);
+    //     if (this.isCtrlShiftPressed) {
+    //         this.isCtrlShiftPressed = false;
+    //         console.log("Återställer flaggan till false", this.isCtrlShiftPressed);
+    //         return;
+    //     }
 
-        if (this.isCtrlShiftPressed) {
-            this.isCtrlShiftPressed = false;
-            // Om flaggan är satt (dvs. användaren tryckte CTRL + SHIFT + I), gör ingenting
-            return;
-        }
+    //     if (this.firstRun) {
+    //         this.firstRun = false;
+    //         return;
+    //     }
 
-        if (this.firstRun) {
-            this.firstRun = false;
-            return;
-        }
-
-        const devToolsNowOpen = window.outerWidth - window.innerWidth > 200;
-
-        if (devToolsNowOpen && !this.devToolsOpen) {
-            this.devToolsOpen = true;
-            this.controlIfToPromt(this.platformCommand + " + SHIFT + I");
-            this.sendToStorage("CTRL/CMD + SHIFT + I");
-        } else if (!devToolsNowOpen && this.devToolsOpen) {
-            this.devToolsOpen = false;
-            this.controlIfToPromt(this.platformCommand + " + SHIFT + I");
-            this.sendToStorage("CTRL/CMD + SHIFT + I");
-        }
-    };
-
-    /**
-     * Kollar ifall DevTools är öppna var 2:e sekund
-     */
-    setInterval(checkDevTools, 2000);
+    //     const devToolsNowOpen = window.outerWidth - window.innerWidth > 200;
+        
+    //     // console.log(this.isDevToolsOpen);
+    //     if (devToolsNowOpen && !this.isCtrlShiftPressed) {
+    //       console.log("DevTools öppnade");
+    //         // this.devToolsOpen = true;
+    //         this.controlIfToPromt(this.platformCommand + " + SHIFT + I");
+    //         this.sendToStorage("CTRL/CMD + SHIFT + I");
+    //     } 
+    //     else if (!devToolsNowOpen && !this.isCtrlShiftPressed) {
+    //       console.log("DevTools stängda");
+    //         // this.devToolsOpen = false;
+    //         this.controlIfToPromt(this.platformCommand + " + SHIFT + II");
+    //         this.sendToStorage("CTRL/CMD + SHIFT + I");
+    //     }
+    // });
 }
+
 
   /**
    * Controllerar ifall någon är påväg ut att skriva ut något 
@@ -213,54 +238,6 @@ setTextInDiv(text) {
       }
     }
   );
-
-    /**
-     *Kontrollerar ifall något trycker på adressfältet, fungerar inte som det ska 
-     *Använder timeout för att förhindra att denna promtar vid andra tillfällen, flaggan måste hinna registreras
-     */
-<<<<<<< Updated upstream
-
-  //   window.addEventListener("blur", () => {
-  //     document.addEventListener("mousemove", function(event) {
-  //       this.X_axis = event.clientX;
-  //       this.Y_axis = event.clientY;
-
-  //       chrome.runtime.sendMessage({
-  //         action: 'mouse_moved',
-  //         x: this.X_axis,
-  //         y: this.Y_axis
-  //       }
-  //     );
-  //   }
-  // );
-
-  //     setTimeout(() => {
-
-  //       if (this.Y_axis<=10 || !this.Y_axis) {
-  //               if (!this.isCtrlDPressed && !this.ctrlLNotShow && !this.isCtrlLPressed) { 
-
-  //               let shortcommandForJson ="CTRL/CMD + L";
-  //               let shortcommand = "CTRL + L";
-  //               this.controlIfToPromt(shortcommand);
-  //               this.sendToStorage(shortcommandForJson);
-  //               }
-  //               else {
-  //                 this.isCtrlDPressed = false;
-  //                 this.ctrlLNotShow = false;
-  //                 this.isCtrlLPressed = false;
-  //               }
-  //             }
-  //             else return;
-  //     }, 200);
-  //   }
-  //  );
-=======
-    window.addEventListener("blur", (e) => {
-      console.log("blur", e);
-      let shortcommand = "CTRL + L";
-      this.setTextInDiv(shortcommand);
-    });
->>>>>>> Stashed changes
   }
 
 /**
@@ -280,7 +257,6 @@ setTextInDiv(text) {
      }
    );
   }
-  
 
   /**
    * Lyssnar efter ifall någon klistrar in text på en sida
@@ -299,10 +275,6 @@ setTextInDiv(text) {
      }
    );
   } 
-
-
-
-
 
   /**
    * Eventlyssnare för om någon cuttar något från textinmatning inte adressfältet dock
@@ -327,29 +299,12 @@ setTextInDiv(text) {
   setupMessageListener() {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (message.action === "show_message") {
-        // Vänta på att `platformCommand` laddas innan användning
           let shortcommand = "";
           let shortcommandForJson = "";
-          // Dynamisk hantering av kortkommandon
-          console.log(message.text);
+        
 
           switch (message.text) {
-            // case "CTRL + W":
-            //   shortcommand = `${this.platformCommand} + W`;
-            //   shortcommandForJson = "CTRL/CMD + W";
-            //   break;
-
-            // case "CTRL + TAB":
-            //   this.ctrlLNotShow = true; 
-            //   shortcommand = `${this.platformCommand} + TAB`;
-            //   shortcommandForJson = "CTRL/CMD + TAB";
-            //   break;
-
-            // case "CTRL + T":
-            //   shortcommand = `${this.platformCommand} + T`;
-            //   shortcommandForJson = "CTRL/CMD + T";
-            //   break;
-
+     
             case "CTRL + R":
               shortcommand = `${this.platformCommand} + R`;
               shortcommandForJson = "CTRL/CMD + R";
@@ -374,72 +329,48 @@ setTextInDiv(text) {
               console.warn("🤷 Okänt meddelande:", message.text);
               return;
           }
-
-      
-                this.controlIfToPromt(shortcommand);
-  // Visa kortkommandot
-        
-          // Skicka data till storage.js för att spara det i chrome.storage.local
-          this.sendToStorage(shortcommandForJson);
+            this.controlIfToPromt(shortcommand);        
+            this.sendToStorage(shortcommandForJson);
 
       }
     });
   }
 
-  setUpListnersForTabAndW(){
-    document.addEventListener("keydown", (event) => {
-      // let isMac = this.platformCommand === "CMD";
-      // let ctrlOrCmd = isMac ? event.metaKey : event.ctrlKey; // ⌘ för Mac, Ctrl för Windows/Linux
-      // console.log("Key pressed: " + event.key);
-        chrome.runtime.sendMessage({
-          action: 'latest_key_pressed',
-          message: event.key
-        });
-      // console.log("CTRL/CMD + key pressed");  
+
+  // setUpListnersForTabAndW(){
+  //   document.addEventListener("keydown", (event) => {
+  //     // let isMac = this.platformCommand === "CMD";
+  //     // let ctrlOrCmd = isMac ? event.metaKey : event.ctrlKey; // ⌘ för Mac, Ctrl för Windows/Linux
+  //     // console.log("Key pressed: " + event.key);
+  //       chrome.runtime.sendMessage({
+  //         action: 'latest_key_pressed',
+  //         message: event.key
+  //       });
+  //     // console.log("CTRL/CMD + key pressed");  
       
-    });
-  }
+  //   });
+  // }
 
+
+  /**
+   * Funktion för att lyssna efter kortkommandon från tangentbordet, använder keydown, lyssnar efter ctrl och sen matchar det med en annan tangent 
+   */
   setupEventListenersForShortcuts() {
-    let keysPressed = {}; // Håller koll på vilka tangenter som är nere
+    let keysPressed = {}; 
 
     document.addEventListener("keydown", (event) => {
-        // Lagra vilka tangenter som är nedtryckta
         keysPressed[event.key] = true;
-
         let isMac = this.platformCommand === "CMD";
-        let ctrlOrCmd = isMac ? event.metaKey : event.ctrlKey; // ⌘ för Mac, Ctrl för Windows/Linux
+        let ctrlOrCmd = isMac ? event.metaKey : event.ctrlKey; 
         let shortcommandForJson = "";
-
-        // Hantera Ctrl + Tab manuellt
-
-      setTimeout(() => {
-        if (keysPressed["Control"] && event.key === "Tab") {
-            shortcommandForJson = "Shortcut: CTRL/CMD + TAB";
-        }
-
-      }, 2000);
 
         // Hantera vanliga Ctrl/Cmd-kortkommandon (utan Shift)
         if (ctrlOrCmd && !event.shiftKey) {
-        //   console.log("CTRL/CMD + key pressed");
-        //   chrome.runtime.sendMessage({
-        //     action: 'ctrl_pressed'
-        // });          
-            // console.log(event.key);
+      
             switch (event.key.toLowerCase()) {
 
-                // case "tab":
-                //     shortcommandForJson = "Shortcut: CTRL/CMD + TAB"; //funkar inte
-                //     break;
-                // case "w":
-                //     shortcommandForJson = "Shortcut: CTRL/CMD + W";//funkar inte
-                //     break;
-                // case "t":
-                //     shortcommandForJson = "Shortcut: CTRL/CMD + T";//funkar inte 
-                //     console.log("tjenare")
-                //     break;
                 case "r":
+                  console.log("r pressed");
                     shortcommandForJson = "Shortcut: CTRL/CMD + R"; //funkar
                     chrome.runtime.sendMessage({
                       action: 'ctrl_r_pressed'
@@ -480,11 +411,12 @@ setTextInDiv(text) {
                 /**
                  * nya kortkommandon som inte mäts via gui
                  */
-
+               
                 case "f":
                     shortcommandForJson = "Shortcut: CTRL/CMD + F";//funkar
                     break;
                 case "z":
+        
                     shortcommandForJson = "Shortcut: CTRL/CMD + Z";//funkar
                     break;
                 case "y":
@@ -504,6 +436,7 @@ setTextInDiv(text) {
                     break;
                 case "l":
                     shortcommandForJson = "Shortcut: CTRL/CMD + L";//funkar
+                  
                     break;
             }
         }
@@ -531,12 +464,6 @@ setTextInDiv(text) {
         if (ctrlOrCmd && event.shiftKey && event.key.toLowerCase() === "i") {
           this.isCtrlShiftPressed = true; // Sätt flaggan
           shortcommandForJson = "Shortcut: CTRL/CMD + SHIFT + I"; //funkar
-
-          // Återställ flaggan efter 1 sekund så att DevTools kan detekteras igen senare
-          // setTimeout(() => {
-          //     this.isCtrlShiftPressed = false;
-          //     console.log("Återställer flaggan till false");
-          // }, 3000);
       }      
 
         // Skicka data om ett kortkommando upptäcktes
@@ -551,17 +478,22 @@ setTextInDiv(text) {
     });
 }
 
+/**
+ * Funktion som kontrollerar ifall en prompt ska visas eller inte, kollar en boolean i chrome storage
+ */
 controlIfToPromt(text) {
+
   chrome.storage.local.get("isPromptsVisible", (data) => {
     if (data.isPromptsVisible) {
-        this.setTextInDiv(text)    
+
+          this.createDivContainer();
+          this.setTextInDiv(text)    
     } 
   })
 }
 
-// Starta lyssnaren
+// Skickar GUI data till background.js
   sendToStorage(shortcommandForJson) {
-     // Skicka data till storage.js för att spara det i chrome.storage.local
      chrome.runtime.sendMessage({
       action: "save_action_for_GUI",
       shortcut: shortcommandForJson
@@ -569,8 +501,8 @@ controlIfToPromt(text) {
     });
   }
 
+//skickar keyboardshortdata till background.js
   sendToStorageForKeyboard(shortcommandForJson) {
-     // Skicka data till storage.js för att spara det i chrome.storage.local
      chrome.runtime.sendMessage({
       action: "save_shortcut_from_keyboard",
       shortcut: shortcommandForJson
