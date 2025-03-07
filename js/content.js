@@ -46,7 +46,6 @@ class ShortCommandNotifier {
                 chrome.storage.local.set({ id: id }, () => {
                 });
             } else {
-                // console.log(`Id finns redan i chrome storage: ${result.id}`);
             }
         });
     }

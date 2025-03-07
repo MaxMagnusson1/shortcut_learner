@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Shortcut-learner",
   "version": "1.0",
-  "description": "Visar en hälsning nere i hörnet.",
+  "description": "Shortcut leaner is University project. This extension is developed to both learn users shortcuts and gather data about the shortcuts users use and how effeicent the tools is. The data gatherd is anonymous. By development reasons this extension will not work at following webbsites, docs.google.com, youtube.com/shorts or tiktok.com   Its developed by Max Magnusson. ",
   "permissions": [
     "activeTab",
     "tabs", 
@@ -24,21 +24,26 @@
   },
 
   "icons": {
-    "16": "img/iconimg.svg",
-    "48": "img/iconimg.svg",
-    "128": "img/iconimg.svg"
+    "16": "img/s-icon.png",
+    "48": "img/s-icon.png",
+    "128": "img/s-icon.png"
   },
 
   "action": {
     "default_popup": "popup.html",
     "default_icon": "img/s-icon.png",
-    "default_title": "Klicka för att säga Hej!"
+    "default_title": "Klicka för undersöka tillägget"
   },
 
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"], 
-      "exclude_matches": ["*://docs.google.com/document*"],
+"exclude_matches": [
+    "*://docs.google.com/document/*",
+    "*://www.youtube.com/shorts/*",
+    "*://tiktok.com/*",
+    "*://www.tiktok.com/*"
+],
       "js": [
         "js/shortcommand_div.js", 
         "js/content.js"

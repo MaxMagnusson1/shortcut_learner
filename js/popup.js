@@ -3,8 +3,8 @@ document.addEventListener("DOMContentLoaded", function () {
     /**
      * Dateobj för start- och sluttid för att visa knappen samt prompts
      */
-    let startTime = new Date("2025-03-03T09:55:00").getTime(); 
-    let endTime = new Date("2026-02-25T11:48:00").getTime(); 
+    let startTime = new Date("2025-03-07T10:59:00").getTime(); 
+    let endTime = new Date("2026-03-07T11:00:00").getTime(); 
 
 
     /**
@@ -60,6 +60,7 @@ document.addEventListener("DOMContentLoaded", function () {
         /**
          * Knapp som leder till extern sida
          */
+        
         if (isVisible) {
             if (!buttonElement) {
                 buttonElement = document.createElement("button");

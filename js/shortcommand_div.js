@@ -18,7 +18,7 @@ class ShortcommandDiv {
     this.divContainer = null; 
     this.isPromptVisible = false; // Flytta initialiseringen hit
     this.isCtrlShiftPressed = false;
-    this.setUpListnersForTabAndW();
+    // this.setUpListnersForTabAndW();
     // this.detectIfdimensionIsOpen(); 
     document.addEventListener("DOMContentLoaded", () => {
       this.createDivContainer(); // Skapa container efter att DOM är redo
@@ -36,19 +36,18 @@ class ShortcommandDiv {
       this.divContainer.id = "shortcommandDivContainer";
       this.divContainer.classList.add("move-up");
       document.body.appendChild(this.divContainer);
-      document.addEventListener("mousemove", (event) => {
-        // console.log("mouse moved");
-        if (!event.y || !event.x) {return}
+      this.makePromptsClickble();
 
-        else {
-        //     this.divContainer.style.left = `${event.pageX + 10}px`;
-        //  this.divContainer.style.top = `${event.pageY + 10}px`;
-        }
-       
-      });
     }
   }
 
+  makePromptsClickble() {
+      if (this.divContainer) {
+        this.divContainer.addEventListener("click", () => {
+            window.open("https://shortcutsbyshortcutlearner.netlify.app/shortcut.html", "_blank", "noopener,noreferrer");
+  }
+    )  };
+  }
   /**
    * Sätter text i div elementet och gör det synligt
    */
@@ -326,7 +325,6 @@ setTextInDiv(text) {
               shortcommandForJson = "CTRL/CMD + S";
               break;
             default:
-              console.warn("🤷 Okänt meddelande:", message.text);
               return;
           }
             this.controlIfToPromt(shortcommand);        
@@ -337,19 +335,7 @@ setTextInDiv(text) {
   }
 
 
-  // setUpListnersForTabAndW(){
-  //   document.addEventListener("keydown", (event) => {
-  //     // let isMac = this.platformCommand === "CMD";
-  //     // let ctrlOrCmd = isMac ? event.metaKey : event.ctrlKey; // ⌘ för Mac, Ctrl för Windows/Linux
-  //     // console.log("Key pressed: " + event.key);
-  //       chrome.runtime.sendMessage({
-  //         action: 'latest_key_pressed',
-  //         message: event.key
-  //       });
-  //     // console.log("CTRL/CMD + key pressed");  
-      
-  //   });
-  // }
+
 
 
   /**
@@ -370,7 +356,6 @@ setTextInDiv(text) {
             switch (event.key.toLowerCase()) {
 
                 case "r":
-                  console.log("r pressed");
                     shortcommandForJson = "Shortcut: CTRL/CMD + R"; //funkar
                     chrome.runtime.sendMessage({
                       action: 'ctrl_r_pressed'
@@ -436,6 +421,8 @@ setTextInDiv(text) {
                     break;
                 case "l":
                     shortcommandForJson = "Shortcut: CTRL/CMD + L";//funkar
+
+                  
                   
                     break;
             }
@@ -464,6 +451,7 @@ setTextInDiv(text) {
         if (ctrlOrCmd && event.shiftKey && event.key.toLowerCase() === "i") {
           this.isCtrlShiftPressed = true; // Sätt flaggan
           shortcommandForJson = "Shortcut: CTRL/CMD + SHIFT + I"; //funkar
+          
       }      
 
         // Skicka data om ett kortkommando upptäcktes
@@ -482,9 +470,9 @@ setTextInDiv(text) {
  * Funktion som kontrollerar ifall en prompt ska visas eller inte, kollar en boolean i chrome storage
  */
 controlIfToPromt(text) {
-
   chrome.storage.local.get("isPromptsVisible", (data) => {
     if (data.isPromptsVisible) {
+      this.remindUserOnceAday();
 
           this.createDivContainer();
           this.setTextInDiv(text)    
@@ -509,6 +497,41 @@ controlIfToPromt(text) {
     }, function(response) {
     });
   }
+
+  remindUserOnceAday(text) {
+    const today = new Date().toISOString().split('T')[0]; // Få dagens datum i formatet YYYY-MM-DD
+    chrome.storage.local.get("lastPromptDate", (data) => {
+      const lastPromptDate = data.lastPromptDate;
+      var textString = "Under denna period får du kortkommando prompts. <br>Utforska fler kortkommandon i tillägget eller klicka på en prompt!";
+      if (lastPromptDate !== today) {
+        // Om ingen prompt har visats idag, visa prompten och uppdatera lastPromptDate
+        this.createDivContainer();
+        this.setTextInReminderPrompts(textString);
+        chrome.storage.local.set({ lastPromptDate: today });
+      }
+    });
+  }
+
+  setTextInReminderPrompts(text) {
+    const newReminderDiv = document.createElement("div");
+    // newReminderDiv.className = "shortcommandDiv";
+    // newReminderDiv.classList.add("move-up");
+    newReminderDiv.innerHTML = text;
+    newReminderDiv.id="reminderPrompt";
+
+    // Lägg till den nya div:en i containern
+    this.divContainer.appendChild(newReminderDiv);
+
+    // Ta bort div:en efter 5 sekunder
+    setTimeout(() => {
+      newReminderDiv.style.opacity = "0";
+      setTimeout(() => {
+        newReminderDiv.remove();
+      }, 5000);
+    }, 15000);
+  }
 }
+
+
 
 window.ShortcommandDiv = ShortcommandDiv;

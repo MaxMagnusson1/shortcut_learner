@@ -5,10 +5,10 @@ header("Access-Control-Allow-Methods: POST");
 header("Access-Control-Allow-Headers: Content-Type");
 
 /**
- * Databasanslutning till local databas,gör sedan en connection till databasen. och skiver ut ett error om det blir fel och gör en exit.
+ * Databasanslutning till local databas, gör sedan en connection till databasen och skriver ut ett error om det blir fel och gör en exit.
  */
 $servername = "localhost";
-$username = "mm224zp_ex";
+$username = "mm224zp";
 $password = "GG7waK5g";
 $dbname = "mm224zp_ex";
 $port = 3306; 
@@ -45,38 +45,10 @@ if (!empty($data) && is_array($data)) {
     }
 
     /**
-     * Kontrollerar om tabellen med samma namn som id finns plus user, ex user_138384474747.
-     * Om antal rows är 0 så finns den inte och den skapas med en query.
+     * Insättning i tabellen all_users. Kontrollerar ifall det är en GUI-action eller Keyboard Shortcut och sätter in det i tabellen tillsammans med en boolean, isItKeyBoardShortcut.
      */
-    $tableName = "user_" . $id;
-    $checkTableQuery = "SHOW TABLES LIKE '$tableName'";
-    $result = $conn->query($checkTableQuery);
-
-    if ($result->num_rows == 0) {
-        $createTableQuery = "CREATE TABLE `$tableName` (
-            id INT PRIMARY KEY AUTO_INCREMENT,
-            shortcut VARCHAR(255) NOT NULL,
-            isItKeyBoardShortcut BOOLEAN NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )";
-        
-        if ($conn->query($createTableQuery) === TRUE) {
-            error_log("Tabell $tableName skapad.");
-        } else {
-            error_log("Fel vid skapande av tabell: " . $conn->error);
-            echo json_encode(["status" => "error", "message" => "Failed to create table"]);
-            exit;
-        }
-    }
-
-    /**
-     * Om tabellen redan finns kommer man direkt hit och det görs en insättning i tablename, vilket är id. Kontrollerar ifall
-     * det är en GUI-action eller Keyboard Shortcut och sätter in det i tabellen tillsammans med en boolean, isItKeyBoardShortcut.
-     */
-
-    $insertQuery = "INSERT INTO `$tableName` (shortcut, isItKeyBoardShortcut) VALUES (?, ?)";
+    $insertQuery = "INSERT INTO all_users (shortcut, isItKeyBoardShortcut, user_id) VALUES (?, ?, ?)";
     $stmt = $conn->prepare($insertQuery);
-
 
     /**
      * Loop genom GUI-actions och sätt in varje kommando som en egen insättning, sätter sedan in en boolean som är false.
@@ -84,7 +56,7 @@ if (!empty($data) && is_array($data)) {
     foreach ($gui_actions as $shortcut => $count) {
         for ($i = 0; $i < $count; $i++) {
             $isKeyboardShortcut = false; // GUI-actions har false
-            $stmt->bind_param("si", $shortcut, $isKeyboardShortcut);
+            $stmt->bind_param("sis", $shortcut, $isKeyboardShortcut, $id);
             $stmt->execute();
         }
     }
@@ -95,7 +67,7 @@ if (!empty($data) && is_array($data)) {
     foreach ($keyboard_shortcuts as $shortcut => $count) {
         for ($i = 0; $i < $count; $i++) {
             $isKeyboardShortcut = true; // Keyboard Shortcuts har true
-            $stmt->bind_param("si", $shortcut, $isKeyboardShortcut);
+            $stmt->bind_param("sis", $shortcut, $isKeyboardShortcut, $id);
             $stmt->execute();
         }
     }
@@ -105,7 +77,7 @@ if (!empty($data) && is_array($data)) {
     echo json_encode([
         "status" => "success",
         "message" => "Data inserted",
-        "table" => $tableName
+        "table" => "all_users"
     ]);
 } else {
     error_log("JSON decode failed or data is empty!");
