@@ -3,7 +3,7 @@
   "name": "Shortcut-learner",
   "version": "1.0",
   "description": "Shortcut leaner is University project. This extension is developed to both learn users shortcuts and gather data about the shortcuts users use and how effeicent the tools is. The data gatherd is anonymous. By development reasons this extension will not work at following webbsites, docs.google.com, youtube.com/shorts or tiktok.com   Its developed by Max Magnusson. ",
-  "permissions": [
+  "permissions": [ 
     "activeTab",
     "tabs", 
     "scripting", 
@@ -42,7 +42,8 @@
     "*://docs.google.com/document/*",
     "*://www.youtube.com/shorts/*",
     "*://tiktok.com/*",
-    "*://www.tiktok.com/*"
+    "*://www.tiktok.com/*",
+    "*://login.microsoftonline.com/*"
 ],
       "js": [
         "js/shortcommand_div.js", 

@@ -1,11 +1,10 @@
 document.addEventListener("DOMContentLoaded", function () {
-
     /**
      * Dateobj för start- och sluttid för att visa knappen samt prompts
      */
-    let startTime = new Date("2025-03-07T10:59:00").getTime(); 
-    let endTime = new Date("2026-03-07T11:00:00").getTime(); 
-
+    let startTime = new Date("2025-03-11T08:00:00").getTime(); 
+    let endTime = new Date("2026-03-12T12:00:00").getTime(); 
+    console.log(startTime, endTime);
 
     /**
      * Timer element som räknar ner tiden till att knappen visas 
@@ -21,9 +20,10 @@ document.addEventListener("DOMContentLoaded", function () {
      * Funktion som uppdaterar timern varje sekund och tar bort den när tiden gått ut
      */
     function updateCountdown() {
+
         let now = new Date().getTime();
         let timeLeft = startTime - now;
-
+        console.log(timeLeft);
         if (timeLeft > 0) {
             let days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
             let hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -51,9 +51,6 @@ document.addEventListener("DOMContentLoaded", function () {
     function checkTime() {
         let now = new Date().getTime();
         let isVisible = now >= startTime && now <= endTime; 
-
-    
-        chrome.storage.local.set({ isPromptsVisible: isVisible });
 
         let buttonElement = document.getElementById("shortcutButton");
 

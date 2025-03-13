@@ -9,7 +9,6 @@ class ShortcommandDiv {
     this.div = null;
     this.devToolsOpen = false; 
     this.firstRun = true; 
-    this.detectDevTools();
     this.setupEventListeners();
     this.setupMessageListener();
     this.setupCopyListener(); 
@@ -18,8 +17,7 @@ class ShortcommandDiv {
     this.divContainer = null; 
     this.isPromptVisible = false; // Flytta initialiseringen hit
     this.isCtrlShiftPressed = false;
-    // this.setUpListnersForTabAndW();
-    // this.detectIfdimensionIsOpen(); 
+    this.ctrlAltButtons(); 
     document.addEventListener("DOMContentLoaded", () => {
       this.createDivContainer(); // Skapa container efter att DOM är redo
       this.setupSelectAllListener();
@@ -27,8 +25,10 @@ class ShortcommandDiv {
       
     }
    );   
-  }
 
+
+
+  }
   
   createDivContainer() {
     if (!this.divContainer) {
@@ -57,7 +57,6 @@ setTextInDiv(text) {
   newDiv.className = "shortcommandDiv";
   newDiv.classList.add("move-up");
   newDiv.textContent = text;
-
  
   // Lägg till den nya div:en i containern
   this.divContainer.appendChild(newDiv);
@@ -88,6 +87,8 @@ setTextInDiv(text) {
     let timeoutId = null;
     let lastClickTime = 0;
     let clickCount = 0;
+    let isCtrlAPressed = false;
+
 
     document.addEventListener("mousedown", (event) => {
         const now = Date.now();
@@ -101,6 +102,19 @@ setTextInDiv(text) {
         lastClickTime = now;
     });
 
+    document.addEventListener("keydown", (event) => {
+      if(event.ctrlKey && event.key.toLowerCase() === "a") {
+        isCtrlAPressed = true;
+
+        setTimeout(() => {
+          isCtrlAPressed = false;
+       }, 350);
+      }
+    }); 
+
+    
+
+  
     /**
      * Eventlyssnare för om det är en dubbelklick eller trippelklick eller om texten är markerad genom att dra, kollar om det är mer än 1 ord som är markerat
      */
@@ -109,6 +123,8 @@ setTextInDiv(text) {
 
         timeoutId = setTimeout(() => {
           let message = "";
+
+          if(!isCtrlAPressed){
 
             if (!this.isPromptVisible) {
                 const selection = window.getSelection();
@@ -143,81 +159,13 @@ setTextInDiv(text) {
                     this.isPromptVisible = false;
                 }, 2000);
             }
+
+        }
         }, 300);
     });
+
+  
 }
-
-
-/**
- * Funktion för att logga ifall använder går in i responsivitets läge 
- */
-// detectIfdimensionIsOpen(){
-//   var checkFlag = true;
-//   window.addEventListener("resize", () => {
-
-//     if(navigator.userAgent.includes("Windows") && window.addEventListener("mousemove", (event) => {})){
-//       console.log("retuerning");
-//       return; 
-//     }
-//     else {
-
-//       if (!checkFlag) {
-//         return;
-//       }
-//       checkFlag = false;
-
-//       console.log("prompting");
-//       this.shortcommandForJson = "CTRL/CMD + SHIFT + M";
-//       this.controlIfToPromt(`${this.platformCommand} + SHIFT + M`);
-//       this.sendToStorage(this.shortcommandForJson);
-      
-//     }
-//     setTimeout(() => {
-//       checkFlag = true;
-//     }, 5000); // <-- Stängande parentes är tillagd här!
-    
-//   }
-
-// );
-// }
-  /**
-   * Kontrollerar ifall inspectorn öppnas, baseras på om fönstret ändras i storlek
-   */
-  detectDevTools() {
-    // window.addEventListener("resize", () => {
-    //   console.log("Fönsterstorlek ändrad");
-    //     console.log(this.isCtrlShiftPressed); 
-    //     console.log(navigator.userAgentData);
-    //     console.log(navigator.userAgent);
-    //     if (this.isCtrlShiftPressed) {
-    //         this.isCtrlShiftPressed = false;
-    //         console.log("Återställer flaggan till false", this.isCtrlShiftPressed);
-    //         return;
-    //     }
-
-    //     if (this.firstRun) {
-    //         this.firstRun = false;
-    //         return;
-    //     }
-
-    //     const devToolsNowOpen = window.outerWidth - window.innerWidth > 200;
-        
-    //     // console.log(this.isDevToolsOpen);
-    //     if (devToolsNowOpen && !this.isCtrlShiftPressed) {
-    //       console.log("DevTools öppnade");
-    //         // this.devToolsOpen = true;
-    //         this.controlIfToPromt(this.platformCommand + " + SHIFT + I");
-    //         this.sendToStorage("CTRL/CMD + SHIFT + I");
-    //     } 
-    //     else if (!devToolsNowOpen && !this.isCtrlShiftPressed) {
-    //       console.log("DevTools stängda");
-    //         // this.devToolsOpen = false;
-    //         this.controlIfToPromt(this.platformCommand + " + SHIFT + II");
-    //         this.sendToStorage("CTRL/CMD + SHIFT + I");
-    //     }
-    // });
-}
-
 
   /**
    * Controllerar ifall någon är påväg ut att skriva ut något 
@@ -238,6 +186,20 @@ setTextInDiv(text) {
     }
   );
   }
+/**
+ * Navigering av allt knappar 
+ */
+ctrlAltButtons() {
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) {
+      let shortcommand = "ALT + ← / ALT + →";
+      let shortcommandForJson = "ALT + ← / ALT + →";
+      this.sendToStorage(shortcommandForJson);
+      this.controlIfToPromt(shortcommand);
+      console.log("Navigering från cache (bakåt/framåt med bfcache)");
+    }
+  });
+}
 
 /**
  * Lyssnar efter ifall någon kopierar text från en sida
@@ -310,7 +272,16 @@ setTextInDiv(text) {
               break;
 
             case "ALT + ← / ALT + →":
-              shortcommand = "ALT + ← / ALT + →"; 
+              if (this.platformCommand==="CMD"){
+                shortcommand = "CMD + ← / CMD + →"; 
+              }
+              else if (this.platformCommand==="CTRL"){
+                  shortcommand = "ALT + ← / ALT + →"; 
+              }
+
+              else {
+                shortcommand = "CTRL/CMD + ← / CTRL/CMD + →";
+              }
               shortcommandForJson = "ALT + ← / ALT + →";
               break;
 
@@ -348,8 +319,9 @@ setTextInDiv(text) {
         keysPressed[event.key] = true;
         let isMac = this.platformCommand === "CMD";
         let ctrlOrCmd = isMac ? event.metaKey : event.ctrlKey; 
+        // console.log(ctrlOrCmd);
         let shortcommandForJson = "";
-
+// console.log(event.key);
         // Hantera vanliga Ctrl/Cmd-kortkommandon (utan Shift)
         if (ctrlOrCmd && !event.shiftKey) {
       
@@ -421,37 +393,55 @@ setTextInDiv(text) {
                     break;
                 case "l":
                     shortcommandForJson = "Shortcut: CTRL/CMD + L";//funkar
-
-                  
-                  
+                
                     break;
             }
         }
+        if (event.altKey || event.metaKey){
+          console.log("ALT");
+          switch (event.key.toLowerCase()) {
+            case "arrowleft":
+                shortcommandForJson = "Shortcut: ALT + ←"; //funkar
+                console.log("ALT + ←");
+                chrome.runtime.sendMessage({
+                  action: 'alt_arrow_pressed'
+              });
+                break;
+            case "arrowright":
+                shortcommandForJson = "Shortcut: ALT + →";//funkar
+                console.log("ALT + →");
+                chrome.runtime.sendMessage({
+                  action: 'alt_arrow_pressed'
+              });
+                break;
+          }
+        }
+
+        
 
         // Hantera Alt + Pil
-        if (event.altKey) {
-            switch (event.key) {
-                case "ArrowLeft":
-                    shortcommandForJson = "Shortcut: ALT + ←"; //funkar
-                    chrome.runtime.sendMessage({
-                      action: 'alt_arrow_pressed'
-                  });
-                    break;
-                case "ArrowRight":
-                    shortcommandForJson = "Shortcut: ALT + →";//funkar
-                    chrome.runtime.sendMessage({
-                      action: 'alt_arrow_pressed'
-                  });
-                    break;
-            }
-        }
+        // if (event.altKey) {
+        //     switch (event.key) {
+        //         case "ArrowLeft":
+        //             shortcommandForJson = "Shortcut: ALT + ←"; //funkar
+        //             chrome.runtime.sendMessage({
+        //               action: 'alt_arrow_pressed'
+        //           });
+        //             break;
+        //         case "ArrowRight":
+        //             shortcommandForJson = "Shortcut: ALT + →";//funkar
+        //             chrome.runtime.sendMessage({
+        //               action: 'alt_arrow_pressed'
+        //           });
+        //             break;
+        //     }
+        // }
 
        
 
         if (ctrlOrCmd && event.shiftKey && event.key.toLowerCase() === "i") {
           this.isCtrlShiftPressed = true; // Sätt flaggan
           shortcommandForJson = "Shortcut: CTRL/CMD + SHIFT + I"; //funkar
-          
       }      
 
         // Skicka data om ett kortkommando upptäcktes
@@ -470,6 +460,7 @@ setTextInDiv(text) {
  * Funktion som kontrollerar ifall en prompt ska visas eller inte, kollar en boolean i chrome storage
  */
 controlIfToPromt(text) {
+  console.log(text); 
   chrome.storage.local.get("isPromptsVisible", (data) => {
     if (data.isPromptsVisible) {
       this.remindUserOnceAday();
@@ -491,6 +482,7 @@ controlIfToPromt(text) {
 
 //skickar keyboardshortdata till background.js
   sendToStorageForKeyboard(shortcommandForJson) {
+
      chrome.runtime.sendMessage({
       action: "save_shortcut_from_keyboard",
       shortcut: shortcommandForJson

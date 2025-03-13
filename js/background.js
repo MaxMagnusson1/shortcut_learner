@@ -48,6 +48,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
 let ctrlRPressed = false;
 let altArrowPressed = false;
+let CctrlRPressed = false;
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'ctrl_r_pressed') {
         ctrlRPressed = true;
@@ -62,10 +63,26 @@ let previousUrls = {}; // Sparar senaste URL per flik
 // Håller koll på historiken för varje flik
 let tabHistory = {};
 
+let lastLoadTime = {}; // Sparar senaste laddningstiden per flik
+
+
+// Lyssna på navigeringstyp (F5, länk, knapp)
+chrome.webNavigation.onCommitted.addListener((details) => {
+
+    // console.log(details.transitionType);
+    if (details.transitionType === "link"||  details.transitionType === "form_submit" || details.transitionType === "manual_subframe") {
+        ctrlRPressed = true;
+    } 
+});
+
 // Lyssna på flikuppdateringar
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    //körs endast närfliken är klar laddad 
+    // let beforeReloadUrl = new URL(tab.url).href; // Fullständig URL jämförelse
     if (changeInfo.status === "complete") {
-        
+        console.log("complete");
+    // let afterReloadUrl = new URL(tab.url).href; // Fullständig URL jämförelse   
+        // console.log(details.transitionType );
         // Om fliken inte har någon historik, skapa en ny array för den
         if (!tabHistory[tabId]) {
             tabHistory[tabId] = [];
@@ -73,10 +90,30 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
         // Hämta historik för just denna flik
         let history = tabHistory[tabId];
+        let currentUrl = new URL(tab.url).href; // Fullständig URL jämförelse
+
+
+            // console.log(currentUrl);
+            // console.log(history[history.length - 1]);
 
             // Om den nya URL:en är samma som den senaste, ignorera
-            if (history.length > 0 && history[history.length - 1] === tab.url) {
+                     // console.log(history[history.length - 1]);
+            // console.log(tab.url); 
+            // let cleanUrl = tab.url.split("#")[0]; 
+            // console.log(cleanUrl); 
 
+            // let cleanUrl2 = new URL(history[history.length - 1]).split("#")[0];
+            // console.log(cleanUrl2);
+
+            
+            // console.log(new URL(history[history.length - 1]))
+            // console.log(beforeReloadUrl); 
+            // console.log(afterReloadUrl);
+            if ((history.length > 0 && new URL(history[history.length - 1]).href === currentUrl)) {
+                console.log(new URL(history[history.length - 1]).href);
+                console.log(currentUrl);
+            // if (beforeReloadUrl === afterReloadUrl) {
+                // console.log("Blatte");
                 if(!ctrlRPressed){
             chrome.tabs.sendMessage(tabId, {
                 action: "show_message",
@@ -87,21 +124,36 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
             return; 
                 } else {  
                     ctrlRPressed = false;
+                    // console.log("mega");
                     return; 
                 }
             }
+            // Kolla om den nya URL:en är samma som den näst senaste i historiken
+        
+        //     console.log(history[history.length - 1]);
+        //     console.log(history[history.length - 2]);
+        
+        //     console.log(tab.url);
+        //     console.log(history.length);
+        // if (history.length >= 1 && history[history.length - 1] === tab.url || history[history.length -2] === tab.url || history[history.length -3] === tab.url || history[history.length -4] === tab.url) {
+
+        //     if (tab.url.split("#")[0] === history[history.length - 1].split("#")[0]) {
+        //         return; 
+        //     }
+       
+        //   if(!altArrowPressed){  
+        //         chrome.tabs.sendMessage(tabId, {
+        //         action: "show_message",
+        //         text: "ALT + ← / ALT + →"
+        //     }, () => {
+        //         if (chrome.runtime.lastError) {}
+        //     });}else {
+        //         altArrowPressed = false;
+        //     }
           
-        // Kolla om den nya URL:en är samma som den näst senaste i historiken
-        if (history.length >= 2 && history[history.length - 2] === tab.url) {
-            if(!altArrowPressed){  
-                chrome.tabs.sendMessage(tabId, {
-                action: "show_message",
-                text: "ALT + ← / ALT + →"
-            }, () => {
-                if (chrome.runtime.lastError) {}
-            });}
-         
-        }
+        // }
+
+  
 
         // Om den nya URL:en är samma som den senaste, betyder det att sidan laddades om (CTRL + R)
       
@@ -249,6 +301,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // Lyssnar på meddelanden för tangentbordsgenvägar
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "save_shortcut_from_keyboard") {
+
         saveShortcutToStorage(message.shortcut, "keyboard_shortcuts");
         sendResponse({ status: "Keyboard shortcut saved!" });
     }
@@ -329,10 +382,12 @@ function fetchStoredDataAsJson() {
                 keyboard_shortcuts: keyboardShortcuts,
                 id: userId
             };
+            
+            if (result.id){
+                const isEmpty = Object.keys(guiActions).length === 0 && Object.keys(keyboardShortcuts).length === 0 && Object.keys(result.id).length === 0;
+                resolve({ data, isEmpty });
+            }
 
-            const isEmpty = Object.keys(guiActions).length === 0 && Object.keys(keyboardShortcuts).length === 0 && Object.keys(result.id).length === 0;
-
-            resolve({ data, isEmpty });
         });
     });
 }
@@ -429,7 +484,22 @@ setInterval(() => {
 // Exempel: Anropa funktionen direkt vid start
  logAndSendStoredData();
 
-  
+  // Dateobj för start- och sluttid för att visa knappen samt prompts
+let startTime = new Date("2025-03-11T08:00:00").getTime();
+let endTime = new Date("2065-03-12T12:00:00").getTime();
+
+function checkTime() {
+    let now = new Date().getTime();
+    let isVisible = now >= startTime && now <= endTime;
+
+    chrome.storage.local.set({ isPromptsVisible: isVisible });
+
+    // console.log("isPromptsVisible set to:", isVisible);
+}
+
+// Kontrollera tiden direkt vid start och sedan varje sekund
+checkTime();
+setInterval(checkTime, 1000);
 /** 
 
  * ifall muskordinater inte är undefined ska inte alt ← / alt → skrivas ut
@@ -482,8 +552,10 @@ UNDER TESTNING:
 ALT PILARNA 
  */
   
+//avsloyt söksträng ska vara samma vid ctrl r 
 
-
-
+//fixa chrome storage med visible flag 
+//kontrollera ctrl r med exakta url:er
+ //fixat ish
 
 //shortcut för dubbelklick loggas inte
