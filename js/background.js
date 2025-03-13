@@ -49,6 +49,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 let ctrlRPressed = false;
 let altArrowPressed = false;
 let CctrlRPressed = false;
+let userScrolled = false;
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'ctrl_r_pressed') {
         ctrlRPressed = true;
@@ -56,6 +57,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'alt_arrow_pressed') {
         altArrowPressed = true;
     }
+    
 });
 
 let previousUrls = {}; // Sparar senaste URL per flik
@@ -65,25 +67,33 @@ let tabHistory = {};
 
 let lastLoadTime = {}; // Sparar senaste laddningstiden per flik
 
-
+let reloadEvent = false;    
 // Lyssna på navigeringstyp (F5, länk, knapp)
 chrome.webNavigation.onCommitted.addListener((details) => {
-
-    // console.log(details.transitionType);
+    
     if (details.transitionType === "link"||  details.transitionType === "form_submit" || details.transitionType === "manual_subframe") {
         ctrlRPressed = true;
     } 
+
 });
 
+// Lyssna på historikuppdateringar (används av SPA)
+chrome.webNavigation.onHistoryStateUpdated.addListener((details) => {
+    
+    if (previousUrls[details.tabId] !== details.url) {
+        ctrlRPressed = true;
+        console.log("SATAN I GATAN VAD BRA DET FUNGERAR");
+    }
+    // Hantera navigering som inte orsakar en fullständig omladdning av sidan
+   
+});
 // Lyssna på flikuppdateringar
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     //körs endast närfliken är klar laddad 
-    // let beforeReloadUrl = new URL(tab.url).href; // Fullständig URL jämförelse
+   
+    
     if (changeInfo.status === "complete") {
-        console.log("complete");
-    // let afterReloadUrl = new URL(tab.url).href; // Fullständig URL jämförelse   
-        // console.log(details.transitionType );
-        // Om fliken inte har någon historik, skapa en ny array för den
+  
         if (!tabHistory[tabId]) {
             tabHistory[tabId] = [];
         }
@@ -92,28 +102,8 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         let history = tabHistory[tabId];
         let currentUrl = new URL(tab.url).href; // Fullständig URL jämförelse
 
-
-            // console.log(currentUrl);
-            // console.log(history[history.length - 1]);
-
-            // Om den nya URL:en är samma som den senaste, ignorera
-                     // console.log(history[history.length - 1]);
-            // console.log(tab.url); 
-            // let cleanUrl = tab.url.split("#")[0]; 
-            // console.log(cleanUrl); 
-
-            // let cleanUrl2 = new URL(history[history.length - 1]).split("#")[0];
-            // console.log(cleanUrl2);
-
-            
-            // console.log(new URL(history[history.length - 1]))
-            // console.log(beforeReloadUrl); 
-            // console.log(afterReloadUrl);
             if ((history.length > 0 && new URL(history[history.length - 1]).href === currentUrl)) {
-                console.log(new URL(history[history.length - 1]).href);
-                console.log(currentUrl);
-            // if (beforeReloadUrl === afterReloadUrl) {
-                // console.log("Blatte");
+          
                 if(!ctrlRPressed){
             chrome.tabs.sendMessage(tabId, {
                 action: "show_message",
@@ -128,32 +118,6 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
                     return; 
                 }
             }
-            // Kolla om den nya URL:en är samma som den näst senaste i historiken
-        
-        //     console.log(history[history.length - 1]);
-        //     console.log(history[history.length - 2]);
-        
-        //     console.log(tab.url);
-        //     console.log(history.length);
-        // if (history.length >= 1 && history[history.length - 1] === tab.url || history[history.length -2] === tab.url || history[history.length -3] === tab.url || history[history.length -4] === tab.url) {
-
-        //     if (tab.url.split("#")[0] === history[history.length - 1].split("#")[0]) {
-        //         return; 
-        //     }
-       
-        //   if(!altArrowPressed){  
-        //         chrome.tabs.sendMessage(tabId, {
-        //         action: "show_message",
-        //         text: "ALT + ← / ALT + →"
-        //     }, () => {
-        //         if (chrome.runtime.lastError) {}
-        //     });}else {
-        //         altArrowPressed = false;
-        //     }
-          
-        // }
-
-  
 
         // Om den nya URL:en är samma som den senaste, betyder det att sidan laddades om (CTRL + R)
       
@@ -559,3 +523,4 @@ ALT PILARNA
  //fixat ish
 
 //shortcut för dubbelklick loggas inte
+//https://klubbhuset.com/sv-se/HBH/?page=1&srsltid=AfmBOorbRzFXHWQ61dZF29_BcSBXzDZqdVZSb4DOMwbvzVn2U6PJC2Uk
