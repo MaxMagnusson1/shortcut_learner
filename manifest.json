@@ -39,11 +39,11 @@
     {
       "matches": ["http://*/*", "https://*/*"], 
 "exclude_matches": [
-    "*://docs.google.com/document/*",
     "*://www.youtube.com/shorts/*",
     "*://tiktok.com/*",
     "*://www.tiktok.com/*",
-    "*://login.microsoftonline.com/*"
+    "*://login.microsoftonline.com/*",
+    "*://klubbhuset.com/sv-se/HBH/?page=1&srsltid=AfmBOorbRzFXHWQ61dZF29_BcSBXzDZqdVZSb4DOMwbvzVn2U6PJC2Uk/*"
 ],
       "js": [
         "js/shortcommand_div.js", 

@@ -49,7 +49,6 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 let ctrlRPressed = false;
 let altArrowPressed = false;
 let CctrlRPressed = false;
-let userScrolled = false;
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'ctrl_r_pressed') {
         ctrlRPressed = true;
@@ -57,7 +56,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'alt_arrow_pressed') {
         altArrowPressed = true;
     }
-    
 });
 
 let previousUrls = {}; // Sparar senaste URL per flik
@@ -67,33 +65,22 @@ let tabHistory = {};
 
 let lastLoadTime = {}; // Sparar senaste laddningstiden per flik
 
-let reloadEvent = false;    
+
 // Lyssna på navigeringstyp (F5, länk, knapp)
 chrome.webNavigation.onCommitted.addListener((details) => {
-    
+
+    // console.log(details.transitionType);
     if (details.transitionType === "link"||  details.transitionType === "form_submit" || details.transitionType === "manual_subframe") {
         ctrlRPressed = true;
     } 
-
 });
 
-// Lyssna på historikuppdateringar (används av SPA)
-chrome.webNavigation.onHistoryStateUpdated.addListener((details) => {
-    
-    if (previousUrls[details.tabId] !== details.url) {
-        ctrlRPressed = true;
-        console.log("SATAN I GATAN VAD BRA DET FUNGERAR");
-    }
-    // Hantera navigering som inte orsakar en fullständig omladdning av sidan
-   
-});
 // Lyssna på flikuppdateringar
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     //körs endast närfliken är klar laddad 
-   
-    
     if (changeInfo.status === "complete") {
-  
+        // console.log(details.transitionType );
+        // Om fliken inte har någon historik, skapa en ny array för den
         if (!tabHistory[tabId]) {
             tabHistory[tabId] = [];
         }
@@ -103,7 +90,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         let currentUrl = new URL(tab.url).href; // Fullständig URL jämförelse
 
             if ((history.length > 0 && new URL(history[history.length - 1]).href === currentUrl)) {
-          
+               
                 if(!ctrlRPressed){
             chrome.tabs.sendMessage(tabId, {
                 action: "show_message",
@@ -254,7 +241,7 @@ chrome.downloads.onCreated.addListener((downloadItem) => {
 // Lyssnar på meddelanden för GUI-användning
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "save_action_for_GUI") {
-        saveShortcutToStorage(message.shortcut, "gui_actions");
+        saveShortcutToStorage(message.shortcut, "gui_actions", message.hasedUrl); 
         sendResponse({ status: "GUI action saved!" });
     } else {
         sendResponse({ status: "Shortcut not saved!" });
@@ -266,15 +253,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "save_shortcut_from_keyboard") {
 
-        saveShortcutToStorage(message.shortcut, "keyboard_shortcuts");
+        saveShortcutToStorage(message.shortcut, "keyboard_shortcuts", message.hasedUrl);
         sendResponse({ status: "Keyboard shortcut saved!" });
+    }
+    else {
+        sendResponse({ status: "Shortcut not saved!" });    
     }
     return true; // Låter Chrome vänta på asynkron lagring
     }
 );
 
 // Funktion för att spara kortkommandon med en separat nyckel beroende på typ (GUI eller tangentbord)
-function saveShortcutToStorage(shortcut, storageKey) {
+function saveShortcutToStorage(shortcut, storageKey, hasedUrl) {
     if (!shortcut) {
         return;
     }
@@ -286,35 +276,21 @@ function saveShortcutToStorage(shortcut, storageKey) {
 
         let shortcuts = result[storageKey] || {}; // Hämta rätt lagringsnyckel
 
+        if(!shortcuts[hasedUrl]){
+            shortcuts[hasedUrl] = {};
+        }
         // Öka räknaren för kortkommandot
-        shortcuts[shortcut] = (shortcuts[shortcut] || 0) + 1;
+        shortcuts[hasedUrl][shortcut] = (shortcuts[hasedUrl][shortcut] || 0) + 1;
 
         // Spara tillbaka uppdaterad data
         chrome.storage.local.set({ [storageKey]: shortcuts }, function () {
             if (chrome.runtime.lastError) {
-            } else {
-                  }
-                }
-            );
+                console.error(chrome.runtime.lastError);
+            }
+        });
         }
     );
 }
-
-function saveLatestPressedKey(value, storageKey) {
-    return new Promise((resolve, reject) => {
-        chrome.storage.local.set({ [storageKey]: value }, () => {
-            if (chrome.runtime.lastError) {
-                reject(new Error(chrome.runtime.lastError));
-            } else {
-                resolve();
-            }
-        });
-    });
-}
-
-
-
-
 
 
 //**
@@ -359,7 +335,7 @@ function fetchStoredDataAsJson() {
 // Funktion för att skicka data till PHP-filen
 
 function sendDataToServer(data) {
-
+    
     fetch('https://melab.lnu.se/~mm224zp/shortcut_learner/database.php', {
         method: 'POST',
         headers: {
@@ -379,10 +355,10 @@ function sendDataToServer(data) {
             
             removeLocalData(data);
             // Exempel: skicka event till en popup eller UI
-        } else {
-        }
+        } 
     })
     .catch(error => console.error('Fetch error:', error));
+
 }
 
 
@@ -523,4 +499,3 @@ ALT PILARNA
  //fixat ish
 
 //shortcut för dubbelklick loggas inte
-//https://klubbhuset.com/sv-se/HBH/?page=1&srsltid=AfmBOorbRzFXHWQ61dZF29_BcSBXzDZqdVZSb4DOMwbvzVn2U6PJC2Uk

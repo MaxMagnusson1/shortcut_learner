@@ -5,7 +5,6 @@ class ShortcommandDiv {
    * Kallar på funktioner
    */
   constructor(os) {
-    
     this.platformCommand = os;
     this.div = null;
     this.devToolsOpen = false; 
@@ -18,7 +17,9 @@ class ShortcommandDiv {
     this.divContainer = null; 
     this.isPromptVisible = false; // Flytta initialiseringen hit
     this.isCtrlShiftPressed = false;
-    this.ctrlAltButtons(); 
+    this.ctrlAltEvent();
+    this.setupPopStateListener();
+    this.overrideHistoryMethods();
     document.addEventListener("DOMContentLoaded", () => {
       this.createDivContainer(); // Skapa container efter att DOM är redo
       this.setupSelectAllListener();
@@ -27,6 +28,7 @@ class ShortcommandDiv {
     }
    );   
   }
+
   
   createDivContainer() {
     if (!this.divContainer) {
@@ -110,8 +112,6 @@ setTextInDiv(text) {
       }
     }); 
 
-    
-
   
     /**
      * Eventlyssnare för om det är en dubbelklick eller trippelklick eller om texten är markerad genom att dra, kollar om det är mer än 1 ord som är markerat
@@ -172,7 +172,7 @@ setTextInDiv(text) {
     window.addEventListener("beforeprint", () => {
 
       if (!this.isCtrlPPressed){
-        let shortcommand = "CTRL + P - Skriv ut";
+        let shortcommand = "CTRL + P";
         let shortcommandForJson = "CTRL/CMD + P";
         this.controlIfToPromt(shortcommand);
         this.sendToStorage(shortcommandForJson);
@@ -184,22 +184,6 @@ setTextInDiv(text) {
     }
   );
   }
-/**
- * Navigering av allt knappar 
- */
-ctrlAltButtons() {
-  window.addEventListener("pageshow", (event) => {
-    if (event.persisted && !this.isAlltPressed) {
-      let shortcommand = "ALT + ← / ALT + →";
-      let shortcommandForJson = "ALT + ← / ALT + →";
-      this.sendToStorage(shortcommandForJson);
-      this.controlIfToPromt(shortcommand);
-    }
-    else {
-      this.isAlltPressed = false
-    }
-  });
-}
 
 /**
  * Lyssnar efter ifall någon kopierar text från en sida
@@ -209,7 +193,7 @@ ctrlAltButtons() {
 
       if(!this.isCtrlCPressed){
           this.shortcommandForJson = "CTRL/CMD + C";
-          this.controlIfToPromt(`${this.platformCommand} + C - Kopiera`);
+          this.controlIfToPromt(`${this.platformCommand} + C`);
           this.sendToStorage(this.shortcommandForJson);
       }
       else {
@@ -227,7 +211,7 @@ ctrlAltButtons() {
 
       if(!this.isCtrlVPressed){
         this.shortcommandForJson = "CTRL/CMD + V";
-      this.controlIfToPromt(`${this.platformCommand} + V - Klistra in`);
+      this.controlIfToPromt(`${this.platformCommand} + V`);
       this.sendToStorage(this.shortcommandForJson);
       }
        else {
@@ -245,7 +229,7 @@ ctrlAltButtons() {
     document.addEventListener("cut", (event) => {
         if (!this.isCtrlXPressed) {
             this.shortcommandForJson = "CTRL/CMD + X";
-            this.controlIfToPromt(`${this.platformCommand} + X - Klipp ut`);
+            this.controlIfToPromt(`${this.platformCommand} + X`);
             this.sendToStorage(this.shortcommandForJson);
         } else {
             this.isCtrlXPressed = false;
@@ -257,6 +241,91 @@ ctrlAltButtons() {
  * Switch case som hanterar olika meddelanden som skickas från background.js
  */
 
+setupPopStateListener() {
+  window.addEventListener('popstate', (event) => {
+    const currentUrl = window.location.href;
+    // Lägg till din logik här för att hantera URL-ändringen
+    this.handleUrlChange(currentUrl);
+  });
+}
+
+/**
+ * Override history methods to detect URL changes
+ */
+overrideHistoryMethods() {
+  const originalPushState = history.pushState;
+  const originalReplaceState = history.replaceState;
+  const handleUrlChange = this.handleUrlChange.bind(this);
+
+  history.pushState = function (state, title, url) {
+    originalPushState.apply(history, arguments);
+    handleUrlChange();
+  };
+history.replaceState = function (state, title, url) {
+  originalReplaceState.apply(history, arguments);
+  handleUrlChange();
+};
+}
+
+/**
+* Hanterar URL-ändringar
+*/
+handleUrlChange() {
+  let shortcommand = "";
+let shortcommandForJson = "";
+  if (!this.altArrowPressed) {
+    if (this.platformCommand === "CTRL") {
+      shortcommand = "ALT + ← / ALT + →";
+      shortcommandForJson = "ALT + ← / ALT + →";
+    } else if (this.platformCommand === "CMD") {
+      shortcommand = "CMD + ← / CMD + →";
+      shortcommandForJson = "ALT + ← / ALT + →";
+    } else {
+      shortcommand = "CTRL/CMD + ← / CTRL/CMD + →";
+      shortcommandForJson = "ALT + ← / ALT + →";
+    }
+    this.controlIfToPromt(shortcommand);
+    this.sendToStorage(shortcommandForJson);
+  } else {
+    this.altArrowPressed = false;
+  }
+// Lägg till din logik här för att hantera URL-ändringen
+// Exempel: Visa en prompt när URL ändras
+// this.controlIfToPromt(`URL changed to: ${url}`);
+}
+
+// ...existing code...
+
+ctrlAltEvent() {
+let shortcommand = "";
+let shortcommandForJson = "";
+
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted && !this.altArrowPressed) {
+    if (this.platformCommand === "CTRL") {
+      shortcommand = "ALT + ← / ALT + →";
+      shortcommandForJson = "ALT + ← / ALT + →";
+    } else if (this.platformCommand === "CMD") {
+      shortcommand = "CMD + ← / CMD + →";
+      shortcommandForJson = "ALT + ← / ALT + →";
+    } else {
+      shortcommand = "CTRL/CMD + ← / CTRL/CMD + →";
+      shortcommandForJson = "ALT + ← / ALT + →";
+    }
+    this.controlIfToPromt(shortcommand);
+    this.sendToStorage(shortcommandForJson);
+  } else {
+    this.altArrowPressed = false;
+  }
+});
+}
+
+// ...existing code...
+
+
+
+
+
   setupMessageListener() {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (message.action === "show_message") {
@@ -267,32 +336,32 @@ ctrlAltButtons() {
           switch (message.text) {
      
             case "CTRL + R":
-              shortcommand = `${this.platformCommand} + R - Ladda om`;
+              shortcommand = `${this.platformCommand} + R`;
               shortcommandForJson = "CTRL/CMD + R";
               break;
 
             case "ALT + ← / ALT + →":
-              if (this.platformCommand==="CMD - Framåt & bak"){
+              if (this.platformCommand==="CMD"){
                 shortcommand = "CMD + ← / CMD + →"; 
               }
-              else if (this.platformCommand==="CTRL - Framåt & bak"){
+              else if (this.platformCommand==="CTRL"){
                   shortcommand = "ALT + ← / ALT + →"; 
               }
 
               else {
-                shortcommand = "CTRL/CMD + ← / CTRL/CMD + → - Framåt & bak";
+                shortcommand = "CTRL/CMD + ← / CTRL/CMD + →";
               }
               shortcommandForJson = "ALT + ← / ALT + →";
               break;
 
             case "CTRL + D":
               this.isCtrlDPressed = true;
-              shortcommand = `${this.platformCommand} + D - Bokmärk`;
+              shortcommand = `${this.platformCommand} + D`;
               shortcommandForJson = "CTRL/CMD + D";
               break;
 
             case "CTRL + S":
-              shortcommand = `${this.platformCommand} + S - Spara`;
+              shortcommand = `${this.platformCommand} + S`;
               shortcommandForJson = "CTRL/CMD + S";
               break;
             default:
@@ -319,9 +388,8 @@ ctrlAltButtons() {
         keysPressed[event.key] = true;
         let isMac = this.platformCommand === "CMD";
         let ctrlOrCmd = isMac ? event.metaKey : event.ctrlKey; 
-        // console.log(ctrlOrCmd);
         let shortcommandForJson = "";
-// console.log(event.key);
+
         // Hantera vanliga Ctrl/Cmd-kortkommandon (utan Shift)
         if (ctrlOrCmd && !event.shiftKey) {
       
@@ -393,48 +461,54 @@ ctrlAltButtons() {
                     break;
                 case "l":
                     shortcommandForJson = "Shortcut: CTRL/CMD + L";//funkar
-                
+
+                  
+                  
                     break;
             }
         }
+
+        // // Hantera Alt + Pil
+        // if (event.altKey) {
+        //     switch (event.key) {
+        //         case "ArrowLeft":
+        //             shortcommandForJson = "Shortcut: ALT + ←"; //funkar
+        //             this.altArrowPressed = true;
+        //           //   chrome.runtime.sendMessage({
+        //           //     action: 'alt_arrow_pressed'
+        //           // });
+        //             break;
+        //         case "ArrowRight":
+        //             shortcommandForJson = "Shortcut: ALT + →";//funkar
+        //             this.altArrowPressed = true;
+        //           //   chrome.runtime.sendMessage({
+        //           //     action: 'alt_arrow_pressed'
+        //           // });
+        //             break;
+        //     }
+        // }
+
         if (event.altKey || event.metaKey){
+          console.log("ALT");
           switch (event.key.toLowerCase()) {
             case "arrowleft":
                 shortcommandForJson = "Shortcut: ALT + ←"; //funkar
-                  this.isAlltPressed = true;
-                //   chrome.runtime.sendMessage({
+                this.altArrowPressed = true;
+
+              //   chrome.runtime.sendMessage({
               //     action: 'alt_arrow_pressed'
               // });
                 break;
             case "arrowright":
                 shortcommandForJson = "Shortcut: ALT + →";//funkar
-                this.isAlltPressed = true;
+              this.altArrowPressed = true;
+
               //   chrome.runtime.sendMessage({
               //     action: 'alt_arrow_pressed'
               // });
                 break;
           }
         }
-
-        
-
-        // Hantera Alt + Pil
-        // if (event.altKey) {
-        //     switch (event.key) {
-        //         case "ArrowLeft":
-        //             shortcommandForJson = "Shortcut: ALT + ←"; //funkar
-        //             chrome.runtime.sendMessage({
-        //               action: 'alt_arrow_pressed'
-        //           });
-        //             break;
-        //         case "ArrowRight":
-        //             shortcommandForJson = "Shortcut: ALT + →";//funkar
-        //             chrome.runtime.sendMessage({
-        //               action: 'alt_arrow_pressed'
-        //           });
-        //             break;
-        //     }
-        // }
 
        
 
@@ -459,10 +533,10 @@ ctrlAltButtons() {
  * Funktion som kontrollerar ifall en prompt ska visas eller inte, kollar en boolean i chrome storage
  */
 controlIfToPromt(text) {
+
   chrome.storage.local.get("isPromptsVisible", (data) => {
     if (data.isPromptsVisible) {
-      this.remindUserOnceAday();
-
+          this.remindUserOnceAday();
           this.createDivContainer();
           this.setTextInDiv(text)    
     } 
@@ -471,19 +545,30 @@ controlIfToPromt(text) {
 
 // Skickar GUI data till background.js
   sendToStorage(shortcommandForJson) {
+    // Get the current URL
+
+// You can also use other properties of window.location
+  const hostname = window.location.hostname;
+  var hashedUrlString = window.btoa(hostname); // Encode the hostname to base64
+
      chrome.runtime.sendMessage({
       action: "save_action_for_GUI",
-      shortcut: shortcommandForJson
+      shortcut: shortcommandForJson, 
+      hasedUrl: hashedUrlString
     }, function(response) {
     });
   }
 
 //skickar keyboardshortdata till background.js
   sendToStorageForKeyboard(shortcommandForJson) {
+    const hostname = window.location.hostname;
+    var hashedUrlString = window.btoa(hostname); // Encode the hostname to base64
 
      chrome.runtime.sendMessage({
       action: "save_shortcut_from_keyboard",
-      shortcut: shortcommandForJson
+      shortcut: shortcommandForJson,
+      hasedUrl: hashedUrlString
+
     }, function(response) {
     });
   }

@@ -13,6 +13,8 @@ $password = "GG7waK5g";
 $dbname = "mm224zp_ex";
 $port = 3306; 
 
+
+
 $conn = new mysqli($servername, $username, $password, $dbname, $port);
 
 if ($conn->connect_error) {
@@ -47,28 +49,32 @@ if (!empty($data) && is_array($data)) {
     /**
      * Insättning i tabellen all_users. Kontrollerar ifall det är en GUI-action eller Keyboard Shortcut och sätter in det i tabellen tillsammans med en boolean, isItKeyBoardShortcut.
      */
-    $insertQuery = "INSERT INTO all_users (shortcut, isItKeyBoardShortcut, user_id) VALUES (?, ?, ?)";
+    $insertQuery = "INSERT INTO data_from_all_users (shortcut, isItKeyBoardShortcut, user_id, url) VALUES (?, ?, ?, ?)";
     $stmt = $conn->prepare($insertQuery);
 
     /**
      * Loop genom GUI-actions och sätt in varje kommando som en egen insättning, sätter sedan in en boolean som är false.
      */
-    foreach ($gui_actions as $shortcut => $count) {
-        for ($i = 0; $i < $count; $i++) {
-            $isKeyboardShortcut = false; // GUI-actions har false
-            $stmt->bind_param("sis", $shortcut, $isKeyboardShortcut, $id);
-            $stmt->execute();
+    foreach ($gui_actions as $url => $shortcuts) {
+        foreach ($shortcuts as $shortcut => $count) {
+            for ($i = 0; $i < $count; $i++) {
+                $isKeyboardShortcut = false; // GUI-actions har false
+                $stmt->bind_param("siss", $shortcut, $isKeyboardShortcut, $id, $url);
+                $stmt->execute();
+            }
         }
     }
 
     /**
      * Loop genom Keyboard Shortcuts och sätt in varje kommando som en egen insättning, sätter sedan in en boolean som är true.
      */
-    foreach ($keyboard_shortcuts as $shortcut => $count) {
-        for ($i = 0; $i < $count; $i++) {
-            $isKeyboardShortcut = true; // Keyboard Shortcuts har true
-            $stmt->bind_param("sis", $shortcut, $isKeyboardShortcut, $id);
-            $stmt->execute();
+    foreach ($keyboard_shortcuts as $url => $shortcuts) {
+        foreach ($shortcuts as $shortcut => $count) {
+            for ($i = 0; $i < $count; $i++) {
+                $isKeyboardShortcut = true; // Keyboard Shortcuts har true
+                $stmt->bind_param("siss", $shortcut, $isKeyboardShortcut, $id, $url);
+                $stmt->execute();
+            }
         }
     }
 
