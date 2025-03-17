@@ -12,7 +12,7 @@ function saveShortcutToStorage(shortcut) {
 
       // Lägg till det nya kortkommandot
       shortcuts.push({ shortcut: shortcut, timestamp: new Date().toISOString() });
-
+//HH
       // Spara tillbaka uppdaterad lista i Chrome Storage
       chrome.storage.local.set({ shortcuts: shortcuts }, function () {
           console.log("Kortkommando sparat:", shortcut);
