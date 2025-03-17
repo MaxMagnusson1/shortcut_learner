@@ -128,7 +128,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
                 }
             }
 
-        // Om den nya URL:en är samma som den senaste, betyder det att sidan laddades om (CTRL + R)
+        // Om den nya URL:en är samma som den senaste, betyder det att sidan laddade om (CTRL + R)
       
         // Uppdatera historiken för fliken
         history.push(tab.url);
