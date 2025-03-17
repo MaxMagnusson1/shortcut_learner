@@ -7,6 +7,7 @@ class ShortcommandDiv {
   constructor(os) {
     this.platformCommand = os;
     this.div = null;
+    this.promptingAltArrow = false;
     this.devToolsOpen = false; 
     this.firstRun = true; 
     this.setupEventListeners();
@@ -15,11 +16,13 @@ class ShortcommandDiv {
     this.setupPasteListener(); 
     this.setupCutListener();
     this.divContainer = null; 
-    this.isPromptVisible = false; // Flytta initialiseringen hit
+    this.isPromptVisible = false; 
     this.isCtrlShiftPressed = false;
     this.ctrlAltEvent();
     this.setupPopStateListener();
     this.overrideHistoryMethods();
+    this.mouseY;
+
     document.addEventListener("DOMContentLoaded", () => {
       this.createDivContainer(); // Skapa container efter att DOM är redo
       this.setupSelectAllListener();
@@ -27,6 +30,11 @@ class ShortcommandDiv {
       
     }
    );   
+
+   window.addEventListener("mousemove", (event) => {
+    this.mouseY = event.clientY;
+});
+
   }
 
   
@@ -44,9 +52,10 @@ class ShortcommandDiv {
   makePromptsClickble() {
       if (this.divContainer) {
         this.divContainer.addEventListener("click", () => {
-            window.open("https://shortcutsbyshortcutlearner.netlify.app/shortcut.html", "_blank", "noopener,noreferrer");
-  }
-    )  };
+        window.open("https://shortcutsbyshortcutlearner.netlify.app/shortcut.html", "_blank", "noopener,noreferrer");
+          }
+        ); 
+     };
   }
   /**
    * Sätter text i div elementet och gör det synligt
@@ -68,6 +77,15 @@ setTextInDiv(text) {
       newDiv.remove(); 
     }, 500); 
   }, 5000);
+
+  setTimeout(() => {
+    if(this.promptingAltArrow){
+      this.promptingAltArrow = false
+      chrome.runtime.sendMessage({
+        action: 'alt_prompts_not_visable'
+    });
+    }
+  }, 2000);
 }
 
   /**
@@ -88,7 +106,6 @@ setTextInDiv(text) {
     let lastClickTime = 0;
     let clickCount = 0;
     let isCtrlAPressed = false;
-
 
     document.addEventListener("mousedown", (event) => {
         const now = Date.now();
@@ -152,17 +169,11 @@ setTextInDiv(text) {
                 this.isPromptVisible = true;
                 this.sendToStorage(message);
                 this.controlIfToPromt(message);
-
-                setTimeout(() => {
-                    this.isPromptVisible = false;
-                }, 2000);
             }
-
         }
         }, 300);
-    });
-
-  
+    }
+  );
 }
 
   /**
@@ -172,12 +183,11 @@ setTextInDiv(text) {
     window.addEventListener("beforeprint", () => {
 
       if (!this.isCtrlPPressed){
-        let shortcommand = "CTRL + P";
+        let shortcommand = this.platformCommand + " + P - Skriv ut";
         let shortcommandForJson = "CTRL/CMD + P";
         this.controlIfToPromt(shortcommand);
         this.sendToStorage(shortcommandForJson);
       }
-
       else {
         this.isCtrlPPressed = false
       }
@@ -193,7 +203,7 @@ setTextInDiv(text) {
 
       if(!this.isCtrlCPressed){
           this.shortcommandForJson = "CTRL/CMD + C";
-          this.controlIfToPromt(`${this.platformCommand} + C`);
+          this.controlIfToPromt(`${this.platformCommand} + C - Kopiera`);
           this.sendToStorage(this.shortcommandForJson);
       }
       else {
@@ -211,7 +221,7 @@ setTextInDiv(text) {
 
       if(!this.isCtrlVPressed){
         this.shortcommandForJson = "CTRL/CMD + V";
-      this.controlIfToPromt(`${this.platformCommand} + V`);
+      this.controlIfToPromt(`${this.platformCommand} + V - Klistra in`);
       this.sendToStorage(this.shortcommandForJson);
       }
        else {
@@ -229,7 +239,7 @@ setTextInDiv(text) {
     document.addEventListener("cut", (event) => {
         if (!this.isCtrlXPressed) {
             this.shortcommandForJson = "CTRL/CMD + X";
-            this.controlIfToPromt(`${this.platformCommand} + X`);
+            this.controlIfToPromt(`${this.platformCommand} + X - Klipp ut`);
             this.sendToStorage(this.shortcommandForJson);
         } else {
             this.isCtrlXPressed = false;
@@ -244,7 +254,6 @@ setTextInDiv(text) {
 setupPopStateListener() {
   window.addEventListener('popstate', (event) => {
     const currentUrl = window.location.href;
-    // Lägg till din logik här för att hantera URL-ändringen
     this.handleUrlChange(currentUrl);
   });
 }
@@ -270,28 +279,36 @@ history.replaceState = function (state, title, url) {
 /**
 * Hanterar URL-ändringar
 */
+
 handleUrlChange() {
   let shortcommand = "";
-let shortcommandForJson = "";
+  let shortcommandForJson = "";
+
   if (!this.altArrowPressed) {
+    this.promptingAltArrow=true;
+    chrome.runtime.sendMessage({
+      action: 'alt_prompts_visable'
+  });
+    if (this.mouseY<=5 || !this.mouseY){
     if (this.platformCommand === "CTRL") {
-      shortcommand = "ALT + ← / ALT + →";
+      shortcommand = "ALT + ← / ALT + → - Bakåt/framåt";
       shortcommandForJson = "ALT + ← / ALT + →";
     } else if (this.platformCommand === "CMD") {
-      shortcommand = "CMD + ← / CMD + →";
+      shortcommand = "CMD + ← / CMD + → - Bakåt/framåt";
       shortcommandForJson = "ALT + ← / ALT + →";
     } else {
-      shortcommand = "CTRL/CMD + ← / CTRL/CMD + →";
+      shortcommand = "CTRL/CMD + ← / CTRL/CMD + → - Bakåt/framåt";
       shortcommandForJson = "ALT + ← / ALT + →";
     }
+     
     this.controlIfToPromt(shortcommand);
     this.sendToStorage(shortcommandForJson);
-  } else {
+  } 
+}
+  else {
     this.altArrowPressed = false;
+  
   }
-// Lägg till din logik här för att hantera URL-ändringen
-// Exempel: Visa en prompt när URL ändras
-// this.controlIfToPromt(`URL changed to: ${url}`);
 }
 
 // ...existing code...
@@ -301,28 +318,33 @@ let shortcommand = "";
 let shortcommandForJson = "";
 
 window.addEventListener("pageshow", (event) => {
+
   if (event.persisted && !this.altArrowPressed) {
+    chrome.runtime.sendMessage({
+      action: 'alt_prompts_visable'
+  })
+    this.promptingAltArrow=true;
+    if (this.mouseY<=5 || !this.mouseY){
+
     if (this.platformCommand === "CTRL") {
-      shortcommand = "ALT + ← / ALT + →";
+      shortcommand = "ALT + ← / ALT + → - Bakåt/framåt";
       shortcommandForJson = "ALT + ← / ALT + →";
     } else if (this.platformCommand === "CMD") {
       shortcommand = "CMD + ← / CMD + →";
-      shortcommandForJson = "ALT + ← / ALT + →";
+      shortcommandForJson = "ALT + ← / ALT + → - Bakåt/framåt";
     } else {
-      shortcommand = "CTRL/CMD + ← / CTRL/CMD + →";
+      shortcommand = "CTRL/CMD + ← / CTRL/CMD + → - Bakåt/framåt";
       shortcommandForJson = "ALT + ← / ALT + →";
     }
     this.controlIfToPromt(shortcommand);
     this.sendToStorage(shortcommandForJson);
+  }
+;
   } else {
     this.altArrowPressed = false;
   }
 });
 }
-
-// ...existing code...
-
-
 
 
 
@@ -332,36 +354,35 @@ window.addEventListener("pageshow", (event) => {
           let shortcommand = "";
           let shortcommandForJson = "";
         
-
           switch (message.text) {
      
             case "CTRL + R":
-              shortcommand = `${this.platformCommand} + R`;
+              shortcommand = `${this.platformCommand} + R - Ladda om`;
               shortcommandForJson = "CTRL/CMD + R";
               break;
 
             case "ALT + ← / ALT + →":
               if (this.platformCommand==="CMD"){
-                shortcommand = "CMD + ← / CMD + →"; 
+                shortcommand = "CMD + ← / CMD + → - Bakåt/framåt"; 
               }
               else if (this.platformCommand==="CTRL"){
-                  shortcommand = "ALT + ← / ALT + →"; 
+                  shortcommand = "ALT + ← / ALT + → - Bakåt/framåt"; 
               }
 
               else {
-                shortcommand = "CTRL/CMD + ← / CTRL/CMD + →";
+                shortcommand = "CTRL/CMD + ← / CTRL/CMD + →- Bakåt/framåt";
               }
               shortcommandForJson = "ALT + ← / ALT + →";
               break;
 
             case "CTRL + D":
               this.isCtrlDPressed = true;
-              shortcommand = `${this.platformCommand} + D`;
+              shortcommand = `${this.platformCommand} + D - Bokmärke`;
               shortcommandForJson = "CTRL/CMD + D";
               break;
 
             case "CTRL + S":
-              shortcommand = `${this.platformCommand} + S`;
+              shortcommand = `${this.platformCommand} + S - Spara`;
               shortcommandForJson = "CTRL/CMD + S";
               break;
             default:
@@ -373,10 +394,6 @@ window.addEventListener("pageshow", (event) => {
       }
     });
   }
-
-
-
-
 
   /**
    * Funktion för att lyssna efter kortkommandon från tangentbordet, använder keydown, lyssnar efter ctrl och sen matchar det med en annan tangent 
@@ -468,44 +485,16 @@ window.addEventListener("pageshow", (event) => {
             }
         }
 
-        // // Hantera Alt + Pil
-        // if (event.altKey) {
-        //     switch (event.key) {
-        //         case "ArrowLeft":
-        //             shortcommandForJson = "Shortcut: ALT + ←"; //funkar
-        //             this.altArrowPressed = true;
-        //           //   chrome.runtime.sendMessage({
-        //           //     action: 'alt_arrow_pressed'
-        //           // });
-        //             break;
-        //         case "ArrowRight":
-        //             shortcommandForJson = "Shortcut: ALT + →";//funkar
-        //             this.altArrowPressed = true;
-        //           //   chrome.runtime.sendMessage({
-        //           //     action: 'alt_arrow_pressed'
-        //           // });
-        //             break;
-        //     }
-        // }
-
         if (event.altKey || event.metaKey){
-          console.log("ALT");
           switch (event.key.toLowerCase()) {
             case "arrowleft":
                 shortcommandForJson = "Shortcut: ALT + ←"; //funkar
                 this.altArrowPressed = true;
-
-              //   chrome.runtime.sendMessage({
-              //     action: 'alt_arrow_pressed'
-              // });
                 break;
+
             case "arrowright":
                 shortcommandForJson = "Shortcut: ALT + →";//funkar
-              this.altArrowPressed = true;
-
-              //   chrome.runtime.sendMessage({
-              //     action: 'alt_arrow_pressed'
-              // });
+                this.altArrowPressed = true;
                 break;
           }
         }
@@ -589,15 +578,13 @@ controlIfToPromt(text) {
 
   setTextInReminderPrompts(text) {
     const newReminderDiv = document.createElement("div");
-    // newReminderDiv.className = "shortcommandDiv";
-    // newReminderDiv.classList.add("move-up");
     newReminderDiv.innerHTML = text;
     newReminderDiv.id="reminderPrompt";
 
     // Lägg till den nya div:en i containern
     this.divContainer.appendChild(newReminderDiv);
 
-    // Ta bort div:en efter 5 sekunder
+    // Ta bort div:en efter 15 sekunder
     setTimeout(() => {
       newReminderDiv.style.opacity = "0";
       setTimeout(() => {

@@ -75,6 +75,23 @@ chrome.webNavigation.onCommitted.addListener((details) => {
     } 
 });
 
+let altPromptsVisable = false;  
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.action === 'alt_prompts_visable') {
+        altPromptsVisable = true;
+        console.log("altPromptsVisable", altPromptsVisable);    
+    }
+});
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.action === 'alt_prompts_not_visable') {
+        altPromptsVisable = false;
+    }
+});
+
+
+
+
 // Lyssna på flikuppdateringar
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     //körs endast närfliken är klar laddad 
@@ -90,9 +107,14 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         let currentUrl = new URL(tab.url).href; // Fullständig URL jämförelse
 
             if ((history.length > 0 && new URL(history[history.length - 1]).href === currentUrl)) {
-               
-                if(!ctrlRPressed){
-            chrome.tabs.sendMessage(tabId, {
+                console.log(history);
+                console.log(new URL(history[history.length - 1]).href);
+                console.log("current",currentUrl);
+
+                if(!ctrlRPressed && !altPromptsVisable){
+                    // if(!ctrlRPressed ){
+
+                chrome.tabs.sendMessage(tabId, {
                 action: "show_message",
                 text: "CTRL + R"
             }, () => {
@@ -298,12 +320,6 @@ function saveShortcutToStorage(shortcut, storageKey, hasedUrl) {
 //  */
 
 
-
-
-
-
-
-
 // Funktion för att hämta gui_actions och keyboard_shortcuts från Chrome Storage och returnera som JSON
 function fetchStoredDataAsJson() {
     return new Promise((resolve, reject) => {
@@ -341,16 +357,14 @@ function sendDataToServer(data) {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(data)     
     })
     .then(response => {
-       
-
         // Konvertera JSON-svaret
         return response.json().then(result => ({ result }));
     })
     .then(({ result }) => {
-        // Skicka en ping till frontend beroende på status
+        // Skicka en ping till frontend beroende på status    
         if (result.status === "success") {
             
             removeLocalData(data);
@@ -499,3 +513,4 @@ ALT PILARNA
  //fixat ish
 
 //shortcut för dubbelklick loggas inte
+// alt pilarna är fel i fullshprtcutlearner

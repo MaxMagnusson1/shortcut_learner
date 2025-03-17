@@ -14,7 +14,7 @@
 
 #shortcommandDivContainer{
     position: fixed;
-    bottom: -40px; 
+    bottom: 40px; 
     right: 10px; 
     z-index: 9999;
     display: flex;
@@ -32,7 +32,7 @@
 
 
 .shortcommandDiv {
-    background: blue;
+    background: black;
     background-size: 200% 100%;
     color: white;
     padding: 10px;
@@ -47,20 +47,6 @@
     cursor: pointer;
     font-family: Arial, Helvetica, sans-serif;
 }
-
-/* @keyframes shimmer {
-    0% {
-        background: linear-gradient(90deg, blue 25%, rgba(255, 255, 255, 0.2) 50%, blue 75%);
-        background-size: 200% 100%;
-        background-position: -200% 0;
-    }
-    100% {
-        background: blue;
-        background-size: 200% 100%;
-        background-position: 200% 0;
-    }
-} */
-
 
 #shortcutLink{
     align-items: center;
